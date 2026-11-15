@@ -1,0 +1,2462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<meta name="theme-color" content="#f4f0e8" />
+<meta name="description" content="Doashow — a calm desktop for the work that matters. Made by callmecoffee3." />
+<title>Doashow Desktop — callmecoffee3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --desktop: #f4f0e8;
+  --panel: #faf8f3;
+  --border: #d4cbb8;
+  --border-dark: #b8ad96;
+  --text: #2c2a26;
+  --muted: #6b6560;
+  --accent: #8b7355;
+  --gold: #C8A951;
+  --charcoal: #0A0A0A;
+  --titlebar: #ebe5d9;
+  --titlebar-on: #e0d8c8;
+  --shadow: 0 10px 36px rgba(44,42,38,.14);
+  --shadow-sm: 0 2px 8px rgba(44,42,38,.08);
+  --radius: 11px;
+  --font: "Manrope", system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; overflow: hidden;
+  font-family: var(--font); color: var(--text);
+  background: var(--desktop); user-select: none;
+}
+
+/* ── Sign-in ── */
+#lock {
+  position: fixed; inset: 0; z-index: 10000;
+  background: linear-gradient(165deg, #1a1814 0%, #0A0A0A 50%, #1c1810 100%);
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .3s, visibility .3s;
+}
+#lock.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+.lock-card {
+  width: min(340px, 92vw); background: var(--panel);
+  border: 1px solid var(--border-dark); border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0,0,0,.5); padding: 28px 24px 22px; text-align: center;
+}
+.lock-mono {
+  width: 58px; height: 58px; margin: 0 auto 14px; border-radius: 13px;
+  background: var(--charcoal); color: var(--gold); font-weight: 800; font-size: 20px;
+  display: grid; place-items: center; border: 1px solid rgba(200,169,81,.4);
+}
+.lock-card h1 { font-size: 19px; font-weight: 800; margin-bottom: 2px; }
+.lock-card .sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+.lock-card label { display: block; text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+.lock-card input {
+  width: 100%; padding: 10px 12px; margin-bottom: 12px;
+  border: 1px solid var(--border); border-radius: 8px; background: #fff;
+  font-family: var(--font); font-size: 14px; color: var(--text); outline: none;
+}
+.lock-card input:focus { border-color: var(--accent); }
+.lock-card .err { font-size: 12px; color: #c45c5c; min-height: 16px; margin-bottom: 6px; }
+.lock-card .btn-in {
+  width: 100%; padding: 11px; border: none; border-radius: 9px;
+  background: var(--charcoal); color: var(--gold);
+  font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.lock-card .btn-in:hover { opacity: .92; }
+.lock-card .btn-guest {
+  margin-top: 12px; border: none; background: none; font-family: var(--font);
+  font-size: 12px; color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+}
+.lock-card .btn-guest:hover { color: var(--accent); }
+
+/* ── Desktop ── */
+#desk {
+  position: relative; width: 100%; height: 100%;
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(200,169,81,.11) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 80%, rgba(139,115,85,.07) 0%, transparent 45%),
+    var(--desktop);
+  overflow: hidden;
+}
+
+.user-chip {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  display: none; align-items: center; gap: 8px;
+  padding: 5px 12px 5px 5px; background: rgba(250,248,243,.9);
+  backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 999px;
+  font-size: 12px; font-weight: 600; z-index: 6; box-shadow: var(--shadow-sm);
+}
+.user-chip .av {
+  width: 24px; height: 24px; border-radius: 50%; background: var(--charcoal);
+  color: var(--gold); display: grid; place-items: center; font-size: 10px; font-weight: 800;
+}
+.user-chip .out {
+  border: none; background: none; font-size: 11px; color: var(--muted);
+  cursor: pointer; font-family: var(--font); margin-left: 2px;
+}
+.user-chip .out:hover { color: var(--accent); }
+
+.pic {
+  position: absolute; right: 24px; top: 24px; width: 190px;
+  background: var(--panel); border: 1px solid var(--border-dark);
+  border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; z-index: 2;
+  cursor: pointer; transition: transform .15s, box-shadow .15s;
+}
+.pic:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(44,42,38,.16); }
+.pic-art {
+  height: 132px; background: linear-gradient(145deg, #1a1814, #0A0A0A 40%, #1c1810);
+  display: grid; place-items: center; position: relative;
+}
+.pic-art::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 30% 28%, rgba(200,169,81,.18), transparent 55%);
+}
+.pic-meta { padding: 9px 11px 11px; border-top: 1px solid var(--border); }
+.pic-meta .t { font-size: 12px; font-weight: 700; }
+.pic-meta .b { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+.brand {
+  position: absolute; bottom: 50px; right: 18px;
+  display: flex; align-items: center; gap: 9px; opacity: .5; pointer-events: none; z-index: 1;
+}
+.brand .m {
+  width: 34px; height: 34px; border-radius: 8px; background: var(--charcoal);
+  color: var(--gold); font-weight: 800; font-size: 12px; display: grid; place-items: center;
+  border: 1px solid rgba(200,169,81,.35);
+}
+.brand .tx { font-size: 11px; font-weight: 600; color: var(--muted); line-height: 1.3; }
+.brand .tx strong { color: var(--accent); }
+
+/* Icons */
+.icon {
+  position: absolute; width: 86px; display: flex; flex-direction: column; align-items: center;
+  gap: 5px; padding: 7px 3px; border-radius: 8px; cursor: pointer; z-index: 3;
+  transition: background .12s;
+}
+.icon:hover { background: rgba(139,115,85,.12); }
+.icon.sel { background: rgba(139,115,85,.22); }
+.icon .g {
+  width: 46px; height: 46px; display: grid; place-items: center; font-size: 26px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-sm);
+}
+.icon .l {
+  font-size: 11px; font-weight: 600; text-align: center; line-height: 1.2;
+  max-width: 80px; word-break: break-word; text-shadow: 0 1px 0 rgba(255,255,255,.55);
+}
+
+/* Windows */
+.win {
+  position: absolute; min-width: 270px; min-height: 170px;
+  background: var(--panel); border: 1px solid var(--border-dark);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  display: flex; flex-direction: column; overflow: hidden; z-index: 10;
+}
+.win.on { z-index: 50; border-color: var(--accent); }
+.win.max {
+  top: 0 !important; left: 0 !important;
+  width: 100% !important; height: calc(100% - 40px) !important; border-radius: 0;
+}
+.tb {
+  height: 35px; background: var(--titlebar); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 9px; gap: 7px; cursor: grab; flex-shrink: 0;
+}
+.win.on .tb { background: var(--titlebar-on); }
+.tb:active { cursor: grabbing; }
+.tb .ic { font-size: 13px; }
+.tb .tt {
+  flex: 1; font-size: 13px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tb .ctls { display: flex; gap: 3px; }
+.tb .ctls button {
+  width: 22px; height: 22px; border: none; border-radius: 6px; background: transparent;
+  color: var(--muted); font-size: 12px; cursor: pointer; display: grid; place-items: center;
+}
+.tb .ctls button:hover { background: rgba(0,0,0,.08); color: var(--text); }
+.tb .ctls button.x:hover { background: #c45c5c; color: #fff; }
+.body { flex: 1; overflow: auto; padding: 12px; }
+.rh {
+  position: absolute; right: 0; bottom: 0; width: 14px; height: 14px; cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, var(--border-dark) 50%);
+  border-radius: 0 0 var(--radius) 0;
+}
+
+/* Folder UI */
+.crumb { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+.crumb button {
+  border: none; background: none; font-family: var(--font); font-size: 11px; font-weight: 600;
+  color: var(--accent); cursor: pointer; padding: 2px 4px; border-radius: 4px;
+}
+.crumb button:hover { background: rgba(139,115,85,.1); }
+.crumb .s { opacity: .4; }
+.fbar { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+.fbar button, .abtn {
+  padding: 6px 10px; border: 1px solid var(--border); border-radius: 7px; background: #fff;
+  font-family: var(--font); font-size: 11px; font-weight: 600; color: var(--text); cursor: pointer;
+}
+.fbar button:hover, .abtn:hover { background: var(--titlebar); }
+.fbar button.pri, .abtn.pri { background: var(--charcoal); color: var(--gold); border-color: var(--charcoal); }
+.fgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 6px; }
+.fitem {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 9px 5px; border-radius: 8px; cursor: pointer;
+}
+.fitem:hover { background: rgba(139,115,85,.1); }
+.fitem .fg {
+  width: 38px; height: 38px; display: grid; place-items: center; font-size: 20px;
+  background: #fff; border: 1px solid var(--border); border-radius: 8px;
+}
+.fitem .fn { font-size: 11px; font-weight: 500; text-align: center; line-height: 1.2; max-width: 82px; word-break: break-word; }
+
+.filev h3 { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+.filev .meta { font-size: 11px; color: var(--muted); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.filev pre {
+  background: #f0ebe3; border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px; font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; overflow: auto;
+}
+.filev img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); }
+
+.picv { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 6px; }
+.picv .fr {
+  width: 100%; max-width: 300px; aspect-ratio: 1; border-radius: 12px;
+  background: linear-gradient(145deg, #1a1814, #0A0A0A 40%, #1c1810);
+  display: grid; place-items: center; border: 1px solid var(--border-dark); position: relative; overflow: hidden;
+}
+.picv .fr::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 30% 28%, rgba(200,169,81,.2), transparent 55%);
+}
+.picv .cap { text-align: center; font-size: 12px; color: var(--muted); }
+.picv .cap strong { color: var(--text); font-weight: 700; }
+
+/* Apps */
+.ap h3 { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
+.ap input, .ap textarea {
+  width: 100%; padding: 8px 10px; margin-bottom: 8px;
+  border: 1px solid var(--border); border-radius: 7px; background: #fff;
+  font-family: var(--font); font-size: 13px; color: var(--text); outline: none;
+}
+.ap input:focus, .ap textarea:focus { border-color: var(--accent); }
+.ap textarea { min-height: 90px; resize: vertical; }
+.ap .row { display: flex; gap: 6px; margin-bottom: 8px; }
+.ap .row > * { flex: 1; }
+.hit, .task, .note {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+  margin-bottom: 5px; background: #fff; font-size: 13px;
+}
+.hit { cursor: pointer; }
+.hit:hover, .note:hover { background: var(--titlebar); }
+.task.done span { text-decoration: line-through; color: var(--muted); }
+.task .del, .note .del {
+  margin-left: auto; border: none; background: none; color: var(--muted); cursor: pointer; font-size: 13px;
+}
+.task .del:hover, .note .del:hover { color: #c45c5c; }
+.note { flex-direction: column; gap: 3px; cursor: pointer; }
+.note .nt { font-weight: 600; }
+.note .nb { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+.cal .hd { font-size: 10px; font-weight: 700; color: var(--muted); padding: 4px 0; }
+.cal .d { padding: 7px 0; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.cal .d.today { background: var(--charcoal); color: var(--gold); }
+.cal .d.o { color: var(--border-dark); }
+.clk { text-align: center; padding: 28px 10px; }
+.clk .tm { font-size: 40px; font-weight: 800; letter-spacing: -1px; }
+.clk .dt { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.srow {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.srow:last-of-type { border-bottom: none; }
+.tog {
+  width: 38px; height: 21px; border-radius: 11px; background: var(--border);
+  position: relative; cursor: pointer; transition: background .2s;
+}
+.tog.on { background: var(--accent); }
+.tog::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 17px; height: 17px;
+  border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.tog.on::after { transform: translateX(17px); }
+.empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; color: var(--muted); font-size: 13px; padding: 24px; text-align: center;
+}
+.empty span { font-size: 28px; opacity: .45; }
+
+/* Start menu */
+#start {
+  position: absolute; left: 8px; bottom: 48px; width: 252px;
+  background: rgba(250,248,243,.97); backdrop-filter: blur(14px);
+  border: 1px solid var(--border-dark); border-radius: 14px;
+  box-shadow: var(--shadow); z-index: 200; display: none; flex-direction: column; overflow: hidden;
+}
+#start.open { display: flex; }
+.start-h {
+  padding: 12px 12px 9px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 9px;
+}
+.start-h .av {
+  width: 34px; height: 34px; border-radius: 9px; background: var(--charcoal);
+  color: var(--gold); display: grid; place-items: center; font-weight: 800; font-size: 11px;
+}
+.start-h .nm { font-size: 13px; font-weight: 700; }
+.start-h .em { font-size: 11px; color: var(--muted); }
+.start-apps { padding: 7px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.start-apps button {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 11px 5px; border: none; border-radius: 9px; background: transparent;
+  font-family: var(--font); font-size: 11px; font-weight: 600; color: var(--text); cursor: pointer;
+}
+.start-apps button:hover { background: rgba(139,115,85,.12); }
+.start-apps button .sg { font-size: 20px; }
+.start-f {
+  padding: 7px; border-top: 1px solid var(--border); display: flex; gap: 3px;
+}
+.start-f button {
+  flex: 1; padding: 7px; border: none; border-radius: 7px; background: transparent;
+  font-family: var(--font); font-size: 11px; font-weight: 600; color: var(--muted); cursor: pointer;
+}
+.start-f button:hover { background: rgba(139,115,85,.1); color: var(--text); }
+
+/* Taskbar */
+#bar {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
+  background: rgba(250,248,243,.93); backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 10px; gap: 5px; z-index: 100;
+}
+#bar .start-btn {
+  width: 32px; height: 28px; border: 1px solid var(--border); border-radius: 7px;
+  background: var(--panel); display: grid; place-items: center;
+  font-size: 11px; font-weight: 800; color: var(--gold); cursor: pointer;
+}
+#bar .start-btn:hover, #bar .start-btn.on { background: var(--titlebar-on); }
+#bar .apps { flex: 1; display: flex; gap: 3px; overflow-x: auto; }
+#bar .apps button {
+  height: 28px; padding: 0 9px; border: 1px solid transparent; border-radius: 6px;
+  background: transparent; font-family: var(--font); font-size: 12px; font-weight: 600;
+  color: var(--muted); cursor: pointer; white-space: nowrap;
+}
+#bar .apps button:hover { background: rgba(139,115,85,.1); color: var(--text); }
+#bar .apps button.open { background: rgba(139,115,85,.15); border-color: var(--border); color: var(--text); }
+#bar .apps button.act { background: rgba(139,115,85,.25); border-color: #c4a882; color: var(--text); }
+#bar .clock {
+  font-size: 12px; font-weight: 600; color: var(--muted); padding: 0 8px; min-width: 64px; text-align: right; cursor: pointer;
+}
+#bar .clock:hover { color: var(--text); }
+
+.hidden { display: none !important; }
+
+/* Desktop context menu */
+#ctx {
+  position: absolute; z-index: 500; min-width: 160px;
+  background: rgba(250,248,243,.98); backdrop-filter: blur(12px);
+  border: 1px solid var(--border-dark); border-radius: 10px;
+  box-shadow: var(--shadow); padding: 5px; display: none;
+}
+#ctx.open { display: block; }
+#ctx button {
+  display: block; width: 100%; text-align: left; padding: 8px 12px;
+  border: none; border-radius: 7px; background: transparent;
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  color: var(--text); cursor: pointer;
+}
+#ctx button:hover { background: rgba(139,115,85,.12); }
+
+
+/* Desktop action bar */
+.desk-actions {
+  position: absolute; left: 16px; bottom: 52px; z-index: 5;
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.desk-actions button {
+  padding: 8px 12px; border: 1px solid var(--border-dark); border-radius: 9px;
+  background: rgba(250,248,243,.95); backdrop-filter: blur(10px);
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+  color: var(--text); cursor: pointer; box-shadow: var(--shadow-sm);
+  transition: background .12s, transform .12s;
+}
+.desk-actions button:hover { background: #fff; transform: translateY(-1px); }
+.desk-actions button.pri {
+  background: var(--charcoal); color: var(--gold); border-color: var(--charcoal);
+}
+.desk-actions button.pri:hover { opacity: .92; }
+
+
+.fbar {
+  display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; align-items: center;
+  padding: 8px; background: #f0ebe3; border: 1px solid var(--border); border-radius: 9px;
+}
+.create-box {
+  margin-bottom: 10px; padding: 10px; background: #fff;
+  border: 1px solid var(--border-dark); border-radius: 9px;
+}
+.create-box label {
+  display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px;
+}
+.create-box input, .create-box textarea {
+  width: 100%; padding: 8px 10px; margin-bottom: 8px;
+  border: 1px solid var(--border); border-radius: 7px; background: #fff;
+  font-family: var(--font); font-size: 13px; color: var(--text); outline: none;
+}
+.create-box input:focus, .create-box textarea:focus { border-color: var(--accent); }
+.create-box textarea { min-height: 60px; resize: vertical; }
+.create-box .crow { display: flex; gap: 6px; }
+.create-box .crow button { flex: 1; }
+
+
+/* Folder item actions */
+.fitem { position: relative; }
+.fitem .acts {
+  display: none; position: absolute; top: 2px; right: 2px;
+  flex-direction: column; gap: 2px; z-index: 2;
+}
+.fitem:hover .acts { display: flex; }
+.fitem .acts button {
+  width: 20px; height: 20px; border: 1px solid var(--border); border-radius: 5px;
+  background: #fff; font-size: 10px; cursor: pointer; padding: 0;
+  display: grid; place-items: center; line-height: 1;
+}
+.fitem .acts button:hover { background: var(--titlebar); }
+.fitem .acts button.del:hover { background: #c45c5c; color: #fff; border-color: #c45c5c; }
+.fitem.selected { background: rgba(139,115,85,.18); outline: 1px solid var(--accent-soft, #c4a882); }
+
+.move-bar {
+  margin-bottom: 8px; padding: 8px; background: #fff;
+  border: 1px dashed var(--border-dark); border-radius: 8px; font-size: 12px;
+  display: none; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.move-bar.show { display: flex; }
+.move-bar select {
+  flex: 1; min-width: 120px; padding: 6px 8px; border: 1px solid var(--border);
+  border-radius: 6px; font-family: var(--font); font-size: 12px;
+}
+
+/* Taskbar dock modes */
+#bar {
+  transition: none;
+}
+#bar.dock-bottom {
+  top: auto; bottom: 0; left: 0; right: 0; width: auto; height: 40px;
+  flex-direction: row; border-top: 1px solid var(--border); border-bottom: none;
+  border-left: none; border-right: none;
+}
+#bar.dock-top {
+  top: 0; bottom: auto; left: 0; right: 0; width: auto; height: 40px;
+  flex-direction: row; border-bottom: 1px solid var(--border); border-top: none;
+  border-left: none; border-right: none;
+}
+#bar.dock-left {
+  top: 0; bottom: 0; left: 0; right: auto; width: 52px; height: auto;
+  flex-direction: column; padding: 8px 6px; gap: 6px;
+  border-right: 1px solid var(--border); border-top: none; border-bottom: none; border-left: none;
+}
+#bar.dock-right {
+  top: 0; bottom: 0; right: 0; left: auto; width: 52px; height: auto;
+  flex-direction: column; padding: 8px 6px; gap: 6px;
+  border-left: 1px solid var(--border); border-top: none; border-bottom: none; border-right: none;
+}
+#bar.floating {
+  top: auto; bottom: auto; left: auto; right: auto;
+  width: auto; min-width: 280px; height: 44px;
+  border-radius: 12px; border: 1px solid var(--border-dark);
+  box-shadow: var(--shadow); padding: 0 10px;
+  flex-direction: row;
+}
+#bar.floating .apps { max-width: 360px; }
+#bar .dock-grip {
+  width: 18px; height: 28px; border: none; background: transparent;
+  cursor: grab; color: var(--muted); font-size: 12px;
+  display: grid; place-items: center; flex-shrink: 0;
+}
+#bar .dock-grip:active { cursor: grabbing; }
+#bar.dock-left .apps, #bar.dock-right .apps {
+  flex-direction: column; flex: 1; overflow-y: auto; overflow-x: hidden; width: 100%;
+}
+#bar.dock-left .apps button, #bar.dock-right .apps button {
+  width: 100%; height: auto; padding: 8px 4px; font-size: 10px;
+  white-space: normal; word-break: break-word;
+}
+#bar.dock-left .clock, #bar.dock-right .clock {
+  writing-mode: horizontal-tb; min-width: 0; text-align: center; padding: 6px 0; font-size: 10px;
+}
+#bar .dock-menu {
+  position: absolute; bottom: 48px; left: 8px; z-index: 300;
+  background: rgba(250,248,243,.98); border: 1px solid var(--border-dark);
+  border-radius: 10px; box-shadow: var(--shadow); padding: 5px; display: none; min-width: 140px;
+}
+#bar .dock-menu.open { display: block; }
+#bar.dock-top .dock-menu { bottom: auto; top: 48px; }
+#bar.dock-left .dock-menu { left: 56px; bottom: 8px; }
+#bar.dock-right .dock-menu { left: auto; right: 56px; bottom: 8px; }
+#bar.floating .dock-menu { bottom: 52px; left: 0; }
+#bar .dock-menu button {
+  display: block; width: 100%; text-align: left; padding: 8px 12px;
+  border: none; border-radius: 7px; background: transparent;
+  font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--text); cursor: pointer;
+}
+#bar .dock-menu button:hover { background: rgba(139,115,85,.12); }
+
+/* when taskbar top, push desk content slightly - icons already absolute */
+body.bar-top #desk .user-chip { top: 54px; }
+body.bar-left .desk-actions { left: 64px; }
+body.bar-right .desk-actions { }
+
+
+/* Folder split: tree + pane */
+.folder-layout {
+  display: flex; gap: 0; height: 100%; min-height: 200px;
+}
+.folder-tree {
+  width: 150px; flex-shrink: 0; overflow: auto;
+  border-right: 1px solid var(--border); padding: 6px 4px;
+  background: #f5f1ea; font-size: 11px;
+}
+.folder-tree .ti {
+  display: block; width: 100%; text-align: left;
+  padding: 5px 6px; border: none; border-radius: 6px;
+  background: transparent; font-family: var(--font); font-size: 11px;
+  font-weight: 600; color: var(--text); cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.folder-tree .ti:hover { background: rgba(139,115,85,.12); }
+.folder-tree .ti.on { background: rgba(139,115,85,.22); color: var(--accent); }
+.folder-tree .ti .pad { display: inline-block; }
+.folder-main { flex: 1; overflow: auto; padding: 10px; min-width: 0; }
+.folder-main .fbar { margin-top: 0; }
+.preview-note {
+  font-size: 11px; color: var(--muted); margin-bottom: 8px;
+}
+
+
+/* Desktop create panel */
+#desk-create {
+  position: absolute; left: 16px; bottom: 100px; z-index: 20;
+  width: min(320px, calc(100vw - 32px));
+  background: var(--panel); border: 1px solid var(--border-dark);
+  border-radius: 12px; box-shadow: var(--shadow); padding: 14px;
+  display: none;
+}
+#desk-create.open { display: block; }
+#desk-create h4 { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--accent); }
+#desk-create label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+#desk-create input, #desk-create textarea {
+  width: 100%; padding: 8px 10px; margin-bottom: 8px;
+  border: 1px solid var(--border); border-radius: 7px; background: #fff;
+  font-family: var(--font); font-size: 13px; color: var(--text); outline: none;
+}
+#desk-create input:focus, #desk-create textarea:focus { border-color: var(--accent); }
+#desk-create textarea { min-height: 70px; resize: vertical; }
+#desk-create .crow { display: flex; gap: 6px; }
+#desk-create .crow button { flex: 1; }
+
+
+/* Profile pic */
+.pf-pic, .chip-pic, .start-pic {
+  width: 48px; height: 48px; border-radius: 12px; object-fit: cover;
+  background: var(--charcoal); border: 1px solid rgba(200,169,81,.35);
+}
+.chip-pic { width: 24px; height: 24px; border-radius: 50%; }
+.start-pic { width: 34px; height: 34px; border-radius: 9px; }
+.pf-pic-wrap { position: relative; display: inline-block; }
+.pf-pic-wrap .pf-change {
+  margin-top: 8px; font-size: 11px;
+}
+
+/* Power overlay */
+#power {
+  position: fixed; inset: 0; z-index: 20000;
+  background: #000; color: #C8A951;
+  display: none; align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px;
+  font-family: var(--font);
+}
+#power.on { display: flex; }
+#power .logo {
+  width: 72px; height: 72px; border-radius: 16px; background: #0A0A0A;
+  border: 1px solid rgba(200,169,81,.45); display: grid; place-items: center;
+  font-weight: 800; font-size: 24px; color: #C8A951;
+}
+#power .msg { font-size: 14px; font-weight: 600; opacity: .85; }
+#power .hint { font-size: 12px; color: #888; }
+#power button {
+  margin-top: 12px; padding: 10px 20px; border-radius: 9px;
+  border: 1px solid rgba(200,169,81,.4); background: #0A0A0A;
+  color: #C8A951; font-family: var(--font); font-weight: 700; font-size: 13px;
+  cursor: pointer;
+}
+#power button:hover { border-color: #C8A951; }
+
+
+.pic-art img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  position: relative; z-index: 1;
+}
+.pic-art.has-img::after { opacity: 0.25; }
+.pic-ctx {
+  position: absolute; z-index: 500; min-width: 170px;
+  background: rgba(250,248,243,.98); border: 1px solid var(--border-dark);
+  border-radius: 10px; box-shadow: var(--shadow); padding: 5px; display: none;
+}
+.pic-ctx.open { display: block; }
+.pic-ctx button {
+  display: block; width: 100%; text-align: left; padding: 8px 12px;
+  border: none; border-radius: 7px; background: transparent;
+  font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--text); cursor: pointer;
+}
+.pic-ctx button:hover { background: rgba(139,115,85,.12); }
+
+
+.pic-note {
+  margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--text); line-height: 1.35;
+  white-space: pre-wrap; word-break: break-word; min-height: 0;
+}
+.pic-note:empty { display: none; }
+.pic-note.editable {
+  outline: none; border-radius: 6px; padding: 6px;
+  border: 1px dashed transparent;
+}
+.pic-note.editable:hover { border-color: var(--border); background: rgba(255,255,255,.5); }
+.pic-note.editable:focus { border-color: var(--accent); background: #fff; }
+#bg-input { display: none; }
+
+
+.pic-art video {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  position: relative; z-index: 1; background: #0A0A0A;
+}
+.pic-art.has-video::after { opacity: 0.15; }
+.pic-art .vid-badge {
+  position: absolute; bottom: 6px; left: 6px; z-index: 2;
+  font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+  background: rgba(0,0,0,.55); color: #C8A951;
+}
+
+</style>
+</head>
+<body>
+
+<div id="power">
+  <div class="logo">MG</div>
+  <div class="msg" id="power-msg">Shutting down…</div>
+  <div class="hint">Doashow Desktop · callmecoffee3</div>
+  <button type="button" id="power-up" style="display:none">Power on</button>
+</div>
+<div id="lock">
+  <div class="lock-card">
+    <div class="lock-mono">MG</div>
+    <h1>Doashow</h1>
+    <div class="sub">Sign in · made by callmecoffee3</div>
+    <div class="err" id="lock-err"></div>
+    <label for="lock-name">Display name</label>
+    <input id="lock-name" type="text" placeholder="Your name" autocomplete="username" />
+    <label for="lock-pass">Passcode (optional)</label>
+    <input id="lock-pass" type="password" placeholder="Leave blank for quick access" />
+    <button class="btn-in" id="lock-go">Sign in</button>
+    <button class="btn-guest" id="lock-guest">Continue as guest</button>
+  </div>
+</div>
+
+<div id="desk">
+  <div class="user-chip" id="chip">
+    <div class="av" id="chip-av">?</div>
+    <span id="chip-name">Guest</span>
+    <button class="out" id="chip-out">Sign out</button>
+  </div>
+
+  <div class="pic" id="pic" title="Open portrait · right-click to change">
+    <div class="pic-art" id="pic-art">
+      <svg viewBox="0 0 80 80" width="68" height="68" fill="none">
+        <rect x="8" y="8" width="64" height="64" rx="14" fill="#0A0A0A" stroke="#C8A951" stroke-width="1.5"/>
+        <text x="40" y="48" text-anchor="middle" font-family="Manrope,system-ui,sans-serif" font-weight="800" font-size="22" fill="#C8A951">MG</text>
+      </svg>
+    </div>
+    <div class="pic-meta">
+      <div class="t" id="pic-title">Matt Grosso</div>
+      <div class="b" id="pic-by">by callmecoffee3 · admin</div>
+      <div class="pic-note editable" id="pic-note" contenteditable="true" spellcheck="false" data-placeholder="Add a note…"></div>
+    </div>
+  </div>
+
+  
+  <div class="desk-actions" id="desk-actions">
+    <button class="pri" id="da-folder" title="New folder on desktop">+ Folder</button>
+    <button id="da-file" title="New file on desktop">+ File</button>
+    <button id="da-upload" title="Upload to desktop">Upload</button>
+  </div>
+
+  <div id="desk-create">
+    <h4 id="dc-title">New folder</h4>
+    <div id="dc-body"></div>
+  </div>
+
+
+  <div class="brand">
+    <div class="m">MG</div>
+    <div class="tx"><strong>Doashow Desktop</strong><br>made by callmecoffee3</div>
+  </div>
+</div>
+
+<div id="start">
+  <div class="start-h">
+    <div class="av" id="start-av">G</div>
+    <div>
+      <div class="nm" id="start-nm">Guest</div>
+      <div class="em">Doashow Desktop</div>
+    </div>
+  </div>
+  <div class="start-apps">
+    <button data-a="profile"><span class="sg">👤</span>Profile</button>
+    <button data-a="search"><span class="sg">🔍</span>Search</button>
+    <button data-a="notes"><span class="sg">📝</span>Notes</button>
+    <button data-a="tasks"><span class="sg">✅</span>Tasks</button>
+    <button data-a="calendar"><span class="sg">📅</span>Calendar</button>
+    <button data-a="clock"><span class="sg">🕐</span>Clock</button>
+    <button data-a="settings"><span class="sg">⚙️</span>Settings</button>
+    <button data-a="files"><span class="sg">📁</span>Files</button>
+    <button data-a="uploads"><span class="sg">📂</span>Uploads</button>
+    <button data-a="upload"><span class="sg">⬆️</span>Upload</button>
+    <button data-a="power"><span class="sg">⏻</span>Power</button>
+  </div>
+  <div class="start-f">
+    <button id="start-auth">Sign in</button>
+    <button id="start-about">About</button>
+  </div>
+</div>
+
+<div id="bar" class="dock-bottom">
+  <button class="dock-grip" id="dock-grip" title="Drag to float · click for dock options">⠿</button>
+  <button class="start-btn" id="start-btn" title="Start">MG</button>
+  <div class="apps" id="bar-apps"></div>
+  <div class="clock" id="bar-clock" title="Clock"></div>
+  <div class="dock-menu" id="dock-menu">
+    <button data-dock="bottom">Dock bottom</button>
+    <button data-dock="top">Dock top</button>
+    <button data-dock="left">Dock left</button>
+    <button data-dock="right">Dock right</button>
+    <button data-dock="float">Float</button>
+  </div>
+</div>
+
+
+<div class="pic-ctx" id="pic-ctx">
+  <button type="button" data-pact="change">Change photo</button>
+  <button type="button" data-pact="video">Add / change video</button>
+  <button type="button" data-pact="mute">Toggle sound</button>
+  <button type="button" data-pact="reset">Reset to MG</button>
+  <button type="button" data-pact="note">Edit note</button>
+  <button type="button" data-pact="bg">Change background</button>
+  <button type="button" data-pact="bg-reset">Reset background</button>
+  <button type="button" data-pact="open">Open large</button>
+</div>
+<div id="ctx">
+  <button data-ctx="folder">📁 New folder</button>
+  <button data-ctx="file">📄 New file</button>
+  <button data-ctx="upload">⬆️ Upload here</button>
+  <button data-ctx="refresh">↻ Refresh desktop</button>
+  <button data-ctx="bg">🖼️ Change background</button>
+  <button data-ctx="bg-reset">Reset background</button>
+</div>
+
+<input type="file" id="bg-input" class="hidden" accept="image/*" />
+<input type="file" id="portrait-video-input" class="hidden" accept="video/*" />
+<input type="file" id="portrait-input" class="hidden" accept="image/*" />
+<input type="file" id="pf-pic-input" class="hidden" accept="image/*" />
+<input type="file" id="uploader" class="hidden" multiple />
+
+<script>
+/* ═══════════ State ═══════════ */
+const FS = {
+  Desktop: {
+    type: "folder",
+    children: {
+      Projects: {
+        type: "folder",
+        children: {
+          MICRODRAMA: {
+            type: "folder",
+            children: {
+              "scene-01.txt": { type: "file", content: "SCENE 01 — INT. DIM ROOM — NIGHT\n\nA single lamp. Dust in the beam.\nA figure sits at a table. Waiting." },
+              "scene-02.txt": { type: "file", content: "SCENE 02 — EXT. ALLEY — NIGHT\n\nRain on asphalt. Footsteps.\nSomeone is being followed." },
+              "cast.md": { type: "file", content: "# Cast\n\n- Lead: TBA\n- Shadow: TBA\n\nKeep faces partially obscured." }
+            }
+          },
+          RADIOSHOW: {
+            type: "folder",
+            children: {
+              "episode-01.md": { type: "file", content: "# Night Transmission\n\nCold open: static finds you.\n\n1. Theme\n2. Monologue\n3. Call-in\n4. Outro" },
+              "playlist.txt": { type: "file", content: "1. Ambient pad\n2. Vinyl crackle\n3. Theme sting\n4. Outro bed" }
+            }
+          },
+          DOASHOW: {
+            type: "folder",
+            children: {
+              "README.md": { type: "file", content: "# Doashow\n\nCinematic media hub.\nTV · Movies · Podcasts · Radio\n\nMade by callmecoffee3." },
+              "brand-notes.txt": { type: "file", content: "Palette: cream / charcoal / gold\nMonogram: MG on charcoal\nTone: calm, cinematic" }
+            }
+          },
+          "AI-AGENTS": {
+            type: "folder",
+            children: {
+              "roster.md": { type: "file", content: "# Agents\n\n- Memory bot\n- Scene writer\n- Poster generator\n- Desktop shell" }
+            }
+          }
+        }
+      },
+      "The Fam": {
+        type: "folder",
+        children: {
+          "about.txt": { type: "file", content: "The Fam\n\nSocial layer of the lab.\nKeep it human." }
+        }
+      },
+      Production: {
+        type: "folder",
+        children: {
+          "shot-list.txt": { type: "file", content: "1. Lamp close-up\n2. Hands on table\n3. Door handle\n4. Alley rain\n5. Phone glow" }
+        }
+      },
+      Systems: {
+        type: "folder",
+        children: {
+          "desktop.md": { type: "file", content: "# Desktop Shell\n\nWindows, folders, upload, sign-in.\nMade by callmecoffee3." }
+        }
+      },
+      "callmecoffee3": {
+        type: "folder",
+        children: {
+          "about.txt": { type: "file", content: "callmecoffee3\n\nMatt Grosso · Doashow lab\nX: @callmecoffee3\n\nThis is a desktop shortcut folder." },
+          "links.txt": { type: "file", content: "X: https://x.com/callmecoffee3\nDoashow lab projects live here." }
+        }
+      },
+      Power: {
+        type: "file",
+        content: "POWER\n\nThis icon shuts down the simulated desktop.\nUse Power on from the black screen to start again."
+      },
+      Uploads: {
+        type: "folder",
+        children: {
+          "README.txt": { type: "file", content: "Uploads folder\n\n• Use Start → Upload or the Upload button\n• + Folder to make subfolders\n• Double-click files to open and read\n• Tree on the left opens any subfolder" }
+        }
+      },
+      Portrait: { type: "pic" },
+      "readme.txt": {
+        type: "file",
+        content: "Doashow Desktop\n\n• Double-click folders & files\n• Start (MG): apps, upload, settings\n• + Folder / + File / Upload inside folders\n• Sign in on the lock screen\n\nMade by callmecoffee3"
+      },
+      "welcome.md": {
+        type: "file",
+        content: "# Welcome\n\nOpen Projects, The Fam, Production, Systems.\nStart menu has Search, Notes, Tasks, Calendar, Clock, Settings, Upload.\n\n— callmecoffee3"
+      }
+    }
+  }
+};
+
+let user = null;
+let tasks = [];
+let notes = [];
+let settings = { chip: true };
+try { tasks = JSON.parse(localStorage.getItem("ds_tasks") || "[]"); } catch (e) {}
+try { notes = JSON.parse(localStorage.getItem("ds_notes") || "[]"); } catch (e) {}
+try { settings = JSON.parse(localStorage.getItem("ds_set") || '{"chip":true}'); } catch (e) {}
+let z = 10;
+const wins = new Map();
+let active = null;
+let uploadPath = "Desktop/Uploads";
+let uploadBody = null;
+
+try {
+  const u = localStorage.getItem("ds_user");
+  if (u) user = JSON.parse(u);
+} catch (e) {}
+let avatarUrl = null;
+try { avatarUrl = localStorage.getItem("ds_avatar") || null; } catch (e) {}
+let portraitUrl = null;
+try { portraitUrl = localStorage.getItem("ds_portrait") || null; } catch (e) {}
+let portraitNote = "";
+try { portraitNote = localStorage.getItem("ds_portrait_note") || ""; } catch (e) {}
+let desktopBg = null;
+try { desktopBg = localStorage.getItem("ds_desktop_bg") || null; } catch (e) {}
+let portraitVideo = null;
+try { portraitVideo = localStorage.getItem("ds_portrait_video") || null; } catch (e) {}
+let portraitMuted = true;
+try { portraitMuted = localStorage.getItem("ds_portrait_muted") !== "0"; } catch (e) {}
+
+/* ═══════════ Helpers ═══════════ */
+const parts = p => p.split("/").filter(Boolean);
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const uid = () => "w" + Math.random().toString(36).slice(2, 9);
+const initials = n => (n || "G").trim().split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase() || "G";
+
+function node(path) {
+  let n = FS;
+  for (const p of parts(path)) {
+    if (!n[p] && n.children) n = n.children;
+    if (!n[p]) return null;
+    n = n[p];
+  }
+  return n;
+}
+function kids(path) {
+  const n = node(path);
+  return n && n.type === "folder" ? (n.children || {}) : {};
+}
+function ensure(path) {
+  const n = node(path);
+  if (n && n.type === "folder") {
+    if (!n.children) n.children = {};
+    return n.children;
+  }
+  return null;
+}
+function icon(name, type) {
+  if (name === "Power") return "⏻";
+  if (name === "callmecoffee3") return "☕";
+  if (type === "folder") return "📁";
+  if (type === "pic") return "🖼️";
+  if (type === "upload") return "📎";
+  if (/\.md$/i.test(name)) return "📝";
+  if (/\.(png|jpe?g|gif|webp)$/i.test(name)) return "🖼️";
+  return "📄";
+}
+
+/* ═══════════ Auth ═══════════ */
+function saveUser() {
+  try { localStorage.setItem("ds_user", JSON.stringify(user)); } catch (e) {}
+}
+function clearUser() {
+  try { localStorage.removeItem("ds_user"); } catch (e) {}
+}
+function hideLock() {
+  const lock = document.getElementById("lock");
+  if (!lock) return;
+  lock.classList.add("hide");
+  lock.style.display = "none";
+  lock.style.visibility = "hidden";
+  lock.style.pointerEvents = "none";
+  lock.style.opacity = "0";
+}
+function showLock() {
+  const lock = document.getElementById("lock");
+  if (!lock) return;
+  lock.classList.remove("hide");
+  lock.style.display = "flex";
+  lock.style.visibility = "visible";
+  lock.style.pointerEvents = "auto";
+  lock.style.opacity = "1";
+}
+function setAvatarEl(el, sizeClass) {
+  if (!el) return;
+  if (avatarUrl) {
+    el.innerHTML = `<img class="${sizeClass}" src="${avatarUrl}" alt="" />`;
+  } else {
+    const label = (user && user.initials) ? user.initials : "G";
+    el.textContent = label;
+  }
+}
+function applyUser() {
+  const chip = document.getElementById("chip");
+  if (user) {
+    hideLock();
+    if (chip) chip.style.display = settings.chip ? "flex" : "none";
+    const cn = document.getElementById("chip-name");
+    const ca = document.getElementById("chip-av");
+    const sn = document.getElementById("start-nm");
+    const sa = document.getElementById("start-av");
+    const sauth = document.getElementById("start-auth");
+    if (cn) cn.textContent = user.name;
+    setAvatarEl(ca, "chip-pic");
+    if (sn) sn.textContent = user.name;
+    setAvatarEl(sa, "start-pic");
+    if (sauth) sauth.textContent = "Sign out";
+  } else {
+    if (chip) chip.style.display = "none";
+    const sn = document.getElementById("start-nm");
+    const sa = document.getElementById("start-av");
+    const sauth = document.getElementById("start-auth");
+    if (sn) sn.textContent = "Guest";
+    if (sa) { sa.textContent = "G"; }
+    if (sauth) sauth.textContent = "Sign in";
+  }
+}
+function signIn(name, guest) {
+  try {
+    let n = (name || "").trim();
+    if (!n && guest) n = "Guest";
+    if (!n) {
+      const err = document.getElementById("lock-err");
+      if (err) err.textContent = "Enter a name, or continue as guest.";
+      return;
+    }
+    user = { name: n, initials: initials(n) };
+    saveUser();
+    const err = document.getElementById("lock-err");
+    if (err) err.textContent = "";
+    hideLock();
+    applyUser();
+    setTimeout(() => { try { openPath("Desktop/welcome.md"); } catch (e) {} }, 150);
+  } catch (e) {
+    const err = document.getElementById("lock-err");
+    if (err) err.textContent = "Sign-in error — try Guest.";
+    console.error(e);
+  }
+}
+function signOut() {
+  user = null;
+  clearUser();
+  applyUser();
+  showLock();
+  closeStart();
+}
+
+
+function closeDeskCreate() {
+  const el = document.getElementById("desk-create");
+  if (el) { el.classList.remove("open"); el.querySelector("#dc-body").innerHTML = ""; }
+}
+function openDeskCreate(kind) {
+  const el = document.getElementById("desk-create");
+  if (!el) return;
+  const title = el.querySelector("#dc-title");
+  const body = el.querySelector("#dc-body");
+  title.textContent = kind === "folder" ? "New folder on desktop" : "New file on desktop";
+  if (kind === "folder") {
+    body.innerHTML = `
+      <label>Folder name</label>
+      <input type="text" id="dc-name" placeholder="My folder" />
+      <div class="crow">
+        <button class="abtn pri" type="button" id="dc-ok">Create folder</button>
+        <button class="abtn" type="button" id="dc-cancel">Cancel</button>
+      </div>`;
+  } else {
+    body.innerHTML = `
+      <label>File name</label>
+      <input type="text" id="dc-name" placeholder="notes.txt" />
+      <label>Content (optional)</label>
+      <textarea id="dc-content" placeholder="Write something…"></textarea>
+      <div class="crow">
+        <button class="abtn pri" type="button" id="dc-ok">Create file</button>
+        <button class="abtn" type="button" id="dc-cancel">Cancel</button>
+      </div>`;
+  }
+  el.classList.add("open");
+  const input = body.querySelector("#dc-name");
+  setTimeout(() => input && input.focus(), 40);
+  body.querySelector("#dc-cancel").onclick = closeDeskCreate;
+  body.querySelector("#dc-ok").onclick = () => {
+    const name = (body.querySelector("#dc-name").value || "").trim();
+    if (!name) { input && input.focus(); return; }
+    const ch = ensure("Desktop");
+    if (!ch) return;
+    if (ch[name]) { alert("Already exists on desktop"); return; }
+    if (kind === "folder") ch[name] = { type: "folder", children: {} };
+    else ch[name] = { type: "file", content: (body.querySelector("#dc-content") && body.querySelector("#dc-content").value) || "" };
+    paintIcons();
+    closeDeskCreate();
+  };
+  input && input.addEventListener("keydown", e => {
+    if (e.key === "Enter") body.querySelector("#dc-ok").click();
+    if (e.key === "Escape") closeDeskCreate();
+  });
+}
+function addFolderAt(path) {
+  if (path === "Desktop") { openDeskCreate("folder"); return true; }
+  const name = window.prompt ? prompt("Folder name:") : null;
+  if (!name || !name.trim()) return false;
+  const ch = ensure(path);
+  if (!ch) return false;
+  const n = name.trim();
+  if (ch[n]) { alert("Already exists"); return false; }
+  ch[n] = { type: "folder", children: {} };
+  return true;
+}
+function addFileAt(path) {
+  if (path === "Desktop") { openDeskCreate("file"); return true; }
+  const name = window.prompt ? prompt("File name (e.g. notes.txt):") : null;
+  if (!name || !name.trim()) return false;
+  const ch = ensure(path);
+  if (!ch) return false;
+  const n = name.trim();
+  if (ch[n]) { alert("Already exists"); return false; }
+  const content = (window.prompt ? prompt("Content (optional):") : "") || "";
+  ch[n] = { type: "file", content };
+  return true;
+}
+
+/* ═══════════ Desktop icons ═══════════ */
+function paintIcons() {
+  const desk = document.getElementById("desk");
+  desk.querySelectorAll(".icon").forEach(e => e.remove());
+  const skip = new Set(["Portrait"]);
+  let row = 0, col = 0;
+  Object.keys(kids("Desktop")).filter(n => !skip.has(n)).forEach(name => {
+    const item = kids("Desktop")[name];
+    const el = document.createElement("div");
+    el.className = "icon";
+    el.style.left = (20 + col * 98) + "px";
+    el.style.top = (52 + row * 96) + "px";
+    el.innerHTML = `<div class="g">${icon(name, item.type)}</div><div class="l">${esc(name)}</div>`;
+    el.onclick = e => {
+      e.stopPropagation();
+      desk.querySelectorAll(".icon").forEach(i => i.classList.remove("sel"));
+      el.classList.add("sel");
+    };
+    el.ondblclick = e => { e.stopPropagation(); openPath("Desktop/" + name); };
+    desk.appendChild(el);
+    row++;
+    if (row > 5) { row = 0; col++; }
+  });
+}
+
+/* ═══════════ Windows ═══════════ */
+function openPath(path) {
+  if (path === "Desktop/Power") {
+    powerDown();
+    return;
+  }
+  for (const [id, w] of wins) {
+    if (w.path === path) { focus(id); return; }
+  }
+  const n = node(path);
+  if (!n) return;
+  const id = uid();
+  const name = parts(path).pop();
+  const folder = n.type === "folder";
+  const pic = n.type === "pic";
+  const win = document.createElement("div");
+  win.className = "win on";
+  win.dataset.id = id;
+  win.style.width = folder ? "430px" : pic ? "340px" : "460px";
+  win.style.height = folder ? "350px" : pic ? "390px" : "340px";
+  win.style.left = (70 + wins.size * 24) + "px";
+  win.style.top = (46 + wins.size * 20) + "px";
+  win.style.zIndex = ++z;
+  win.innerHTML = `
+    <div class="tb">
+      <span class="ic">${icon(name, n.type)}</span>
+      <span class="tt">${esc(name)}</span>
+      <div class="ctls">
+        <button data-a="min">─</button>
+        <button data-a="max">□</button>
+        <button class="x" data-a="close">✕</button>
+      </div>
+    </div>
+    <div class="body"></div>
+    <div class="rh"></div>`;
+  document.getElementById("desk").appendChild(win);
+  wins.set(id, { el: win, path, type: n.type, min: false });
+  active = id;
+  const body = win.querySelector(".body");
+  if (folder) paintFolder(body, path);
+  else if (pic) paintPic(body);
+  else paintFile(body, path, n);
+  wire(win, id);
+  paintBar();
+}
+
+function openApp(app) {
+  const titles = { profile: "Profile", search: "Search", notes: "Notes", tasks: "Tasks", calendar: "Calendar", clock: "Clock", settings: "Settings" };
+  const icons = { profile: "👤", search: "🔍", notes: "📝", tasks: "✅", calendar: "📅", clock: "🕐", settings: "⚙️" };
+  const path = "App/" + app;
+  for (const [id, w] of wins) {
+    if (w.path === path) { focus(id); return; }
+  }
+  const id = uid();
+  const win = document.createElement("div");
+  win.className = "win on";
+  win.dataset.id = id;
+  win.style.width = "390px";
+  win.style.height = app === "clock" ? "260px" : "360px";
+  win.style.left = (88 + wins.size * 22) + "px";
+  win.style.top = (56 + wins.size * 18) + "px";
+  win.style.zIndex = ++z;
+  win.innerHTML = `
+    <div class="tb">
+      <span class="ic">${icons[app] || "📦"}</span>
+      <span class="tt">${titles[app] || app}</span>
+      <div class="ctls">
+        <button data-a="min">─</button>
+        <button data-a="max">□</button>
+        <button class="x" data-a="close">✕</button>
+      </div>
+    </div>
+    <div class="body"></div>
+    <div class="rh"></div>`;
+  document.getElementById("desk").appendChild(win);
+  wins.set(id, { el: win, path, type: "app", min: false, app });
+  active = id;
+  paintApp(win.querySelector(".body"), app);
+  wire(win, id);
+  paintBar();
+}
+
+function wire(win, id) {
+  drag(win);
+  resize(win);
+  win.querySelector('[data-a="close"]').onclick = () => close(id);
+  win.querySelector('[data-a="min"]').onclick = () => minimize(id);
+  win.querySelector('[data-a="max"]').onclick = () => {
+    win.classList.toggle("max");
+    focus(id);
+  };
+  win.onmousedown = () => focus(id);
+}
+
+function paintFolder(body, path) {
+  // Build full folder tree from Desktop
+  function collectTree(base, n, depth, out) {
+    if (!n || n.type !== "folder") return;
+    out.push({ path: base, name: parts(base).pop() || base, depth });
+    Object.keys(n.children || {}).sort().forEach(k => {
+      if (n.children[k].type === "folder") collectTree(base + "/" + k, n.children[k], depth + 1, out);
+    });
+  }
+  const tree = [];
+  collectTree("Desktop", FS.Desktop, 0, tree);
+
+  const c = kids(path);
+  const names = Object.keys(c).sort((a, b) => {
+    const ta = c[a].type === "folder" ? 0 : 1;
+    const tb = c[b].type === "folder" ? 0 : 1;
+    if (ta !== tb) return ta - tb;
+    return a.localeCompare(b);
+  });
+
+  let treeHtml = tree.map(item => {
+    const on = item.path === path ? " on" : "";
+    const pad = "&nbsp;".repeat(item.depth * 2);
+    return `<button type="button" class="ti${on}" data-tree="${item.path}" title="${esc(item.path)}"><span class="pad">${pad}</span>📁 ${esc(item.name)}</button>`;
+  }).join("");
+
+  let crumb = `<div class="crumb">`;
+  let acc = "";
+  parts(path).forEach((p, i) => {
+    acc += (acc ? "/" : "") + p;
+    if (i) crumb += `<span class="s">/</span>`;
+    crumb += `<button type="button" data-nav="${acc}">${esc(p)}</button>`;
+  });
+  crumb += `</div>`;
+
+  let main = crumb + `
+  <div class="fbar">
+    <button class="pri" data-act="nf" type="button">+ Folder</button>
+    <button data-act="nfile" type="button">+ File</button>
+    <button data-act="up" type="button">Upload</button>
+  </div>
+  <div class="create-box hidden" id="create-box"></div>
+  <div class="move-bar" id="move-bar">
+    <span>Move selected to:</span>
+    <select id="move-target"></select>
+    <button class="abtn pri" type="button" id="move-go">Move</button>
+    <button class="abtn" type="button" id="move-cancel">Cancel</button>
+  </div>
+  <p class="preview-note">Double-click folder to open here · Double-click file to read · Tree opens any folder</p>`;
+
+  if (!names.length) {
+    main += `<div class="empty"><span>📂</span>Empty — use + Folder or + File above</div>`;
+  } else {
+    main += `<div class="fgrid">`;
+    names.forEach(name => {
+      const attrName = String(name).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+      main += `<div class="fitem" data-open="${path}/${name}" data-name="${attrName}" data-type="${c[name].type}">
+        <div class="acts">
+          <button type="button" data-act="ren" title="Rename">✎</button>
+          <button type="button" data-act="mov" title="Move">⇪</button>
+          <button type="button" class="del" data-act="del" title="Delete">✕</button>
+        </div>
+        <div class="fg">${icon(name, c[name].type)}</div>
+        <div class="fn">${esc(name)}</div>
+      </div>`;
+    });
+    main += `</div>`;
+  }
+
+  body.innerHTML = `<div class="folder-layout">
+    <div class="folder-tree">${treeHtml}</div>
+    <div class="folder-main">${main}</div>
+  </div>`;
+
+  const mainEl = body.querySelector(".folder-main");
+  const box = body.querySelector("#create-box");
+  const moveBar = body.querySelector("#move-bar");
+  let selectedName = null;
+
+  function navTo(targetPath) {
+    const winId = body.closest(".win").dataset.id;
+    const w = wins.get(winId);
+    if (!w) return;
+    const n = node(targetPath);
+    if (!n) return;
+    w.path = targetPath;
+    const name = parts(w.path).pop();
+    w.el.querySelector(".tt").textContent = name;
+    w.el.querySelector(".ic").textContent = icon(name, n.type);
+    if (n.type === "folder") paintFolder(body, w.path);
+    else if (n.type === "pic") paintPic(body);
+    else paintFile(body, w.path, n);
+    paintBar();
+  }
+
+  function showCreate(kind) {
+    if (kind === "folder") {
+      box.innerHTML = `
+        <label>New folder name</label>
+        <input type="text" id="cr-name" placeholder="Folder name" />
+        <div class="crow">
+          <button class="abtn pri" type="button" id="cr-ok">Create folder</button>
+          <button class="abtn" type="button" id="cr-cancel">Cancel</button>
+        </div>`;
+    } else {
+      box.innerHTML = `
+        <label>New file name</label>
+        <input type="text" id="cr-name" placeholder="notes.txt" />
+        <label>Content (optional)</label>
+        <textarea id="cr-body" placeholder="File contents…"></textarea>
+        <div class="crow">
+          <button class="abtn pri" type="button" id="cr-ok">Create file</button>
+          <button class="abtn" type="button" id="cr-cancel">Cancel</button>
+        </div>`;
+    }
+    box.classList.remove("hidden");
+    const input = box.querySelector("#cr-name");
+    setTimeout(() => input && input.focus(), 30);
+    box.querySelector("#cr-cancel").onclick = () => { box.classList.add("hidden"); box.innerHTML = ""; };
+    box.querySelector("#cr-ok").onclick = () => {
+      const name = (box.querySelector("#cr-name").value || "").trim();
+      if (!name) { input && input.focus(); return; }
+      const ch = ensure(path);
+      if (!ch) return;
+      if (ch[name]) { alert("Already exists"); return; }
+      if (kind === "folder") ch[name] = { type: "folder", children: {} };
+      else ch[name] = { type: "file", content: (box.querySelector("#cr-body") && box.querySelector("#cr-body").value) || "" };
+      if (path === "Desktop") paintIcons();
+      paintFolder(body, path);
+    };
+    input && input.addEventListener("keydown", e => { if (e.key === "Enter") box.querySelector("#cr-ok").click(); });
+  }
+
+  function deleteItem(name) {
+    if (!confirm('Delete "' + name + '"?')) return;
+    const ch = ensure(path);
+    if (!ch || !ch[name]) return;
+    delete ch[name];
+    if (path === "Desktop") paintIcons();
+    const full = path + "/" + name;
+    [...wins.entries()].forEach(([id, w]) => {
+      if (w.path === full || (w.path && w.path.startsWith(full + "/"))) close(id);
+    });
+    paintFolder(body, path);
+  }
+
+  function renameItem(name) {
+    box.innerHTML = `
+      <label>Rename</label>
+      <input type="text" id="cr-name" value="${esc(name)}" />
+      <div class="crow">
+        <button class="abtn pri" type="button" id="cr-ok">Rename</button>
+        <button class="abtn" type="button" id="cr-cancel">Cancel</button>
+      </div>`;
+    box.classList.remove("hidden");
+    const input = box.querySelector("#cr-name");
+    setTimeout(() => { input.focus(); input.select(); }, 30);
+    box.querySelector("#cr-cancel").onclick = () => { box.classList.add("hidden"); box.innerHTML = ""; };
+    box.querySelector("#cr-ok").onclick = () => {
+      const next = (input.value || "").trim();
+      if (!next || next === name) { box.classList.add("hidden"); return; }
+      const ch = ensure(path);
+      if (!ch || !ch[name]) return;
+      if (ch[next]) { alert("Already exists"); return; }
+      ch[next] = ch[name];
+      delete ch[name];
+      const oldFull = path + "/" + name;
+      const newFull = path + "/" + next;
+      wins.forEach(w => {
+        if (w.path === oldFull) {
+          w.path = newFull;
+          w.el.querySelector(".tt").textContent = next;
+        } else if (w.path.startsWith(oldFull + "/")) {
+          w.path = newFull + w.path.slice(oldFull.length);
+        }
+      });
+      if (path === "Desktop") paintIcons();
+      paintBar();
+      paintFolder(body, path);
+    };
+    input.addEventListener("keydown", e => { if (e.key === "Enter") box.querySelector("#cr-ok").click(); });
+  }
+
+  function listFolderPaths(base, n, out) {
+    if (!n || n.type !== "folder") return;
+    out.push(base);
+    Object.keys(n.children || {}).forEach(k => {
+      if (n.children[k].type === "folder") listFolderPaths(base + "/" + k, n.children[k], out);
+    });
+  }
+
+  function startMove(name) {
+    selectedName = name;
+    body.querySelectorAll(".fitem").forEach(el => {
+      el.classList.toggle("selected", el.dataset.name === name);
+    });
+    const targets = [];
+    listFolderPaths("Desktop", FS.Desktop, targets);
+    const from = path + "/" + name;
+    const sel = moveBar.querySelector("#move-target");
+    sel.innerHTML = targets
+      .filter(tp => tp !== path && !tp.startsWith(from + "/") && tp !== from)
+      .map(tp => `<option value="${esc(tp)}">${esc(tp)}</option>`)
+      .join("");
+    moveBar.classList.add("show");
+  }
+
+  function doMove() {
+    if (!selectedName) return;
+    const dest = moveBar.querySelector("#move-target").value;
+    if (!dest) return;
+    const srcCh = ensure(path);
+    const destCh = ensure(dest);
+    if (!srcCh || !destCh || !srcCh[selectedName]) return;
+    let name = selectedName;
+    if (destCh[name]) {
+      let n = 1;
+      while (destCh[name + " (" + n + ")"]) n++;
+      name = selectedName + " (" + n + ")";
+    }
+    destCh[name] = srcCh[selectedName];
+    delete srcCh[selectedName];
+    const oldFull = path + "/" + selectedName;
+    const newFull = dest + "/" + name;
+    wins.forEach(w => {
+      if (w.path === oldFull) {
+        w.path = newFull;
+        w.el.querySelector(".tt").textContent = name;
+      } else if (w.path.startsWith(oldFull + "/")) {
+        w.path = newFull + w.path.slice(oldFull.length);
+      }
+    });
+    if (path === "Desktop" || dest === "Desktop") paintIcons();
+    paintBar();
+    selectedName = null;
+    moveBar.classList.remove("show");
+    paintFolder(body, path);
+  }
+
+  // Tree navigation — open any folder/sub in THIS window
+  body.querySelectorAll("[data-tree]").forEach(el => {
+    el.onclick = () => navTo(el.dataset.tree);
+  });
+
+  // Breadcrumb
+  body.querySelectorAll("[data-nav]").forEach(el => {
+    el.onclick = () => navTo(el.dataset.nav);
+  });
+
+  // Items: single click select, double-click open in-place (folder) or new/read (file)
+  body.querySelectorAll("[data-open]").forEach(el => {
+    el.onclick = (e) => {
+      if (e.target.closest(".acts")) return;
+      body.querySelectorAll(".fitem").forEach(i => i.classList.remove("selected"));
+      el.classList.add("selected");
+      selectedName = el.dataset.name;
+    };
+    el.ondblclick = (e) => {
+      if (e.target.closest(".acts")) return;
+      const target = el.dataset.open;
+      const n = node(target);
+      if (!n) return;
+      if (n.type === "folder") {
+        // open subfolder in SAME window
+        navTo(target);
+      } else {
+        // open file in a new window to read, keep folder open
+        openPath(target);
+      }
+    };
+  });
+
+  body.querySelectorAll(".acts button").forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const item = btn.closest(".fitem");
+      const name = item && item.dataset.name;
+      if (!name) return;
+      const act = btn.dataset.act;
+      if (act === "del") deleteItem(name);
+      else if (act === "ren") renameItem(name);
+      else if (act === "mov") startMove(name);
+    };
+  });
+
+  body.querySelector('[data-act="nf"]').onclick = () => showCreate("folder");
+  body.querySelector('[data-act="nfile"]').onclick = () => showCreate("file");
+  body.querySelector('[data-act="up"]').onclick = () => {
+    uploadPath = path;
+    uploadBody = body;
+    document.getElementById("uploader").click();
+  };
+  moveBar.querySelector("#move-go").onclick = doMove;
+  moveBar.querySelector("#move-cancel").onclick = () => {
+    selectedName = null;
+    moveBar.classList.remove("show");
+    body.querySelectorAll(".fitem").forEach(i => i.classList.remove("selected"));
+  };
+}
+
+function paintFile(body, path, n) {
+  const name = parts(path).pop();
+  const parent = parts(path).slice(0, -1).join("/") || "Desktop";
+  let content = "";
+  if (n.type === "upload" && n.dataUrl && (n.mime || "").startsWith("image/")) {
+    content = `<img src="${n.dataUrl}" alt="" />`;
+  } else {
+    content = `<pre>${esc(n.content || "")}</pre>`;
+  }
+  body.innerHTML = `<div class="filev">
+    <div class="fbar" style="margin-bottom:10px">
+      <button type="button" class="abtn" data-back="${parent}">← Back to folder</button>
+      <button type="button" class="abtn" data-open-parent="${parent}">Open folder window</button>
+    </div>
+    <h3>${esc(name)}</h3>
+    <div class="meta">${esc(path)}</div>
+    ${content}
+  </div>`;
+  body.querySelector("[data-back]").onclick = () => {
+    const winId = body.closest(".win").dataset.id;
+    const w = wins.get(winId);
+    if (!w) return;
+    const parentPath = body.querySelector("[data-back]").dataset.back;
+    const pn = node(parentPath);
+    if (!pn || pn.type !== "folder") { openPath(parentPath); return; }
+    w.path = parentPath;
+    w.el.querySelector(".tt").textContent = parts(parentPath).pop();
+    w.el.querySelector(".ic").textContent = "📁";
+    paintFolder(body, parentPath);
+    paintBar();
+  };
+  body.querySelector("[data-open-parent]").onclick = () => {
+    openPath(body.querySelector("[data-open-parent]").dataset.openParent);
+  };
+}
+
+function paintPic(body) {
+  let art = "";
+  if (portraitVideo) {
+    art = `<video src="${portraitVideo}" controls autoplay loop playsinline style="width:100%;height:100%;object-fit:cover;border-radius:12px" ${portraitMuted ? "muted" : ""}></video>`;
+  } else if (portraitUrl) {
+    art = `<img src="${portraitUrl}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px;position:relative;z-index:1" />`;
+  } else {
+    art = `<svg viewBox="0 0 80 80" width="110" height="110" fill="none">
+        <rect x="8" y="8" width="64" height="64" rx="14" fill="#0A0A0A" stroke="#C8A951" stroke-width="1.5"/>
+        <text x="40" y="48" text-anchor="middle" font-family="Manrope,system-ui,sans-serif" font-weight="800" font-size="22" fill="#C8A951">MG</text>
+      </svg>`;
+  }
+  body.innerHTML = `<div class="picv">
+    <div class="fr">${art}</div>
+    <div class="cap"><strong>Matt Grosso</strong><br>Admin · callmecoffee3<br>
+      <div style="margin-top:8px;font-size:12px;color:var(--text);white-space:pre-wrap">${esc(portraitNote || "")}</div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
+        <button class="abtn" type="button" id="pic-change-btn">Photo</button>
+        <button class="abtn" type="button" id="pic-video-btn">Video</button>
+        <button class="abtn" type="button" id="pic-mute-btn">${portraitMuted ? "Unmute" : "Mute"}</button>
+        <button class="abtn" type="button" id="pic-reset-btn">Reset MG</button>
+      </div>
+    </div>
+  </div>`;
+  body.querySelector("#pic-change-btn").onclick = () => document.getElementById("portrait-input").click();
+  body.querySelector("#pic-video-btn").onclick = () => document.getElementById("portrait-video-input").click();
+  body.querySelector("#pic-mute-btn").onclick = () => {
+    portraitMuted = !portraitMuted;
+    try { localStorage.setItem("ds_portrait_muted", portraitMuted ? "1" : "0"); } catch (e) {}
+    applyPortrait();
+    paintPic(body);
+  };
+  body.querySelector("#pic-reset-btn").onclick = () => {
+    portraitUrl = null;
+    portraitVideo = null;
+    try {
+      localStorage.removeItem("ds_portrait");
+      localStorage.removeItem("ds_portrait_video");
+    } catch (e) {}
+    applyPortrait();
+    paintPic(body);
+  };
+}
+
+function paintApp(body, app) {
+  if (app === "search") {
+    body.innerHTML = `<div class="ap"><h3>Search</h3>
+      <input type="search" id="sq" placeholder="Search files & folders…" />
+      <div id="sr"></div></div>`;
+    const q = body.querySelector("#sq");
+    const r = body.querySelector("#sr");
+    q.oninput = () => {
+      const t = q.value.trim().toLowerCase();
+      if (!t) { r.innerHTML = ""; return; }
+      const hits = [];
+      (function walk(path, n) {
+        if (n.type === "folder") Object.keys(n.children || {}).forEach(k => walk(path + "/" + k, n.children[k]));
+        const name = parts(path).pop() || "";
+        if (name.toLowerCase().includes(t) || (n.content && String(n.content).toLowerCase().includes(t))) {
+          hits.push({ path, type: n.type, name });
+        }
+      })("Desktop", FS.Desktop);
+      if (!hits.length) { r.innerHTML = `<div class="empty"><span>🔍</span>No results</div>`; return; }
+      r.innerHTML = hits.slice(0, 40).map(h =>
+        `<div class="hit" data-o="${h.path}"><span>${icon(h.name, h.type)}</span>
+          <div><strong>${esc(h.name)}</strong><br><span style="font-size:11px;color:var(--muted)">${esc(h.path)}</span></div></div>`
+      ).join("");
+      r.querySelectorAll("[data-o]").forEach(el => { el.onclick = () => openPath(el.dataset.o); });
+    };
+    setTimeout(() => q.focus(), 40);
+  } else if (app === "notes") {
+    body.innerHTML = `<div class="ap"><h3>Notes</h3>
+      <input id="nt" placeholder="Title" />
+      <textarea id="nb" placeholder="Write a note…"></textarea>
+      <button class="abtn" id="ns" style="margin-bottom:10px">Save note</button>
+      <div id="nl"></div></div>`;
+    const list = body.querySelector("#nl");
+    function paint() {
+      if (!notes.length) { list.innerHTML = `<div class="empty"><span>📝</span>No notes yet</div>`; return; }
+      list.innerHTML = notes.map((n, i) =>
+        `<div class="note" data-i="${i}">
+          <div class="nt">${esc(n.title || "Untitled")}</div>
+          <div class="nb">${esc(n.body || "")}</div>
+          <button class="del" data-d="${i}">✕</button>
+        </div>`
+      ).join("");
+      list.querySelectorAll("[data-d]").forEach(b => {
+        b.onclick = e => { e.stopPropagation(); notes.splice(+b.dataset.d, 1); localStorage.setItem("ds_notes", JSON.stringify(notes)); paint(); };
+      });
+      list.querySelectorAll(".note").forEach(el => {
+        el.onclick = () => {
+          const n = notes[+el.dataset.i];
+          body.querySelector("#nt").value = n.title || "";
+          body.querySelector("#nb").value = n.body || "";
+        };
+      });
+    }
+    body.querySelector("#ns").onclick = () => {
+      const title = body.querySelector("#nt").value.trim();
+      const b = body.querySelector("#nb").value.trim();
+      if (!title && !b) return;
+      notes.unshift({ title: title || "Untitled", body: b });
+      localStorage.setItem("ds_notes", JSON.stringify(notes));
+      body.querySelector("#nt").value = "";
+      body.querySelector("#nb").value = "";
+      paint();
+    };
+    paint();
+  } else if (app === "tasks") {
+    body.innerHTML = `<div class="ap"><h3>Tasks</h3>
+      <div class="row"><input id="ti" placeholder="New task…" /><button class="abtn" id="ta">Add</button></div>
+      <div id="tl"></div></div>`;
+    const list = body.querySelector("#tl");
+    function paint() {
+      if (!tasks.length) { list.innerHTML = `<div class="empty"><span>✅</span>No tasks</div>`; return; }
+      list.innerHTML = tasks.map((t, i) =>
+        `<div class="task ${t.done ? "done" : ""}">
+          <input type="checkbox" data-i="${i}" ${t.done ? "checked" : ""} />
+          <span style="flex:1">${esc(t.text)}</span>
+          <button class="del" data-d="${i}">✕</button>
+        </div>`
+      ).join("");
+      list.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.onchange = () => { tasks[+cb.dataset.i].done = cb.checked; localStorage.setItem("ds_tasks", JSON.stringify(tasks)); paint(); };
+      });
+      list.querySelectorAll("[data-d]").forEach(b => {
+        b.onclick = () => { tasks.splice(+b.dataset.d, 1); localStorage.setItem("ds_tasks", JSON.stringify(tasks)); paint(); };
+      });
+    }
+    body.querySelector("#ta").onclick = () => {
+      const v = body.querySelector("#ti").value.trim();
+      if (!v) return;
+      tasks.unshift({ text: v, done: false });
+      localStorage.setItem("ds_tasks", JSON.stringify(tasks));
+      body.querySelector("#ti").value = "";
+      paint();
+    };
+    body.querySelector("#ti").onkeydown = e => { if (e.key === "Enter") body.querySelector("#ta").click(); };
+    paint();
+  } else if (app === "calendar") {
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth();
+    const start = (new Date(y, m, 1).getDay() + 6) % 7;
+    const dim = new Date(y, m + 1, 0).getDate();
+    const label = now.toLocaleString(undefined, { month: "long", year: "numeric" });
+    let cells = ["Mo","Tu","We","Th","Fr","Sa","Su"].map(d => `<div class="hd">${d}</div>`).join("");
+    for (let i = 0; i < start; i++) cells += `<div class="d o"></div>`;
+    for (let d = 1; d <= dim; d++) {
+      cells += `<div class="d ${d === now.getDate() ? "today" : ""}">${d}</div>`;
+    }
+    body.innerHTML = `<div class="ap"><h3>${label}</h3><div class="cal">${cells}</div></div>`;
+  } else if (app === "clock") {
+    body.innerHTML = `<div class="clk"><div class="tm" id="ct">--:--</div><div class="dt" id="cd"></div></div>`;
+    const tick = () => {
+      const d = new Date();
+      const t = body.querySelector("#ct");
+      const dd = body.querySelector("#cd");
+      if (!t) return;
+      t.textContent = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      dd.textContent = d.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    };
+    tick();
+    const iv = setInterval(() => {
+      if (!document.body.contains(body)) { clearInterval(iv); return; }
+      tick();
+    }, 1000);
+
+  } else if (app === "profile") {
+    const name = user ? user.name : "Guest";
+    const init = user ? user.initials : "G";
+    const picHtml = avatarUrl
+      ? `<img class="pf-pic" src="${avatarUrl}" alt="" />`
+      : `<div class="pf-pic" style="display:grid;place-items:center;font-weight:800;font-size:16px;color:var(--gold)">${esc(init)}</div>`;
+    body.innerHTML = `<div class="ap">
+      <h3>Profile</h3>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div class="pf-pic-wrap">${picHtml}</div>
+        <div>
+          <div style="font-weight:700;font-size:15px">${esc(name)}</div>
+          <div style="font-size:11px;color:var(--muted)">Doashow Desktop · callmecoffee3</div>
+          <div class="pf-change">
+            <button class="abtn" type="button" id="pf-pic-btn">Change photo</button>
+            <button class="abtn" type="button" id="pf-pic-clear">Remove</button>
+          </div>
+          <div class="pf-change" style="margin-top:6px">
+            <button class="abtn" type="button" id="pf-portrait-btn">Change desktop portrait</button>
+            <button class="abtn" type="button" id="pf-portrait-reset">Reset portrait</button>
+          </div>
+          <div class="pf-change" style="margin-top:6px">
+            <button class="abtn" type="button" id="pf-bg-btn">Change background</button>
+            <button class="abtn" type="button" id="pf-bg-reset">Reset background</button>
+          </div>
+          <label style="font-size:11px;font-weight:600;color:var(--muted);margin-top:10px;display:block">Portrait note</label>
+          <textarea id="pf-note" placeholder="Note under desktop portrait…">${esc(portraitNote || "")}</textarea>
+          <button class="abtn pri" type="button" id="pf-note-save" style="margin-bottom:10px">Save note</button>
+        </div>
+      </div>
+      <label style="font-size:11px;font-weight:600;color:var(--muted)">Display name</label>
+      <input id="pf-name" value="${esc(name)}" placeholder="Your name" />
+      <button class="abtn pri" type="button" id="pf-save" style="margin-bottom:14px">Save profile</button>
+      <h3 style="margin-top:8px">Desktop settings</h3>
+      <div class="srow"><span>Show user chip</span><div class="tog ${settings.chip ? "on" : ""}" data-k="chip"></div></div>
+      <div class="srow"><span>Open welcome on sign-in</span><div class="tog ${settings.welcome !== false ? "on" : ""}" data-k="welcome"></div></div>
+      <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="abtn" type="button" id="pf-uploads">Open Uploads</button>
+        <button class="abtn" type="button" id="pf-desktop">Open Desktop folder</button>
+        <button class="abtn" type="button" id="pf-auth">${user ? "Sign out" : "Sign in"}</button>
+      </div>
+      <p style="margin-top:14px;font-size:11px;color:var(--muted)">Add folders & files from desktop buttons, right-click, or inside any folder window.</p>
+    </div>`;
+    body.querySelector("#pf-pic-btn").onclick = () => document.getElementById("pf-pic-input").click();
+    body.querySelector("#pf-portrait-btn").onclick = () => document.getElementById("portrait-input").click();
+    body.querySelector("#pf-portrait-reset").onclick = () => {
+      portraitUrl = null;
+      try { localStorage.removeItem("ds_portrait"); } catch (e) {}
+      applyPortrait();
+    };
+    body.querySelector("#pf-bg-btn").onclick = () => document.getElementById("bg-input").click();
+    body.querySelector("#pf-bg-reset").onclick = () => {
+      desktopBg = null;
+      try { localStorage.removeItem("ds_desktop_bg"); } catch (e) {}
+      applyBackground();
+    };
+    body.querySelector("#pf-note-save").onclick = () => {
+      portraitNote = (body.querySelector("#pf-note").value || "").trim();
+      try { localStorage.setItem("ds_portrait_note", portraitNote); } catch (e) {}
+      applyPortraitNote();
+    };
+    body.querySelector("#pf-pic-clear").onclick = () => {
+      avatarUrl = null;
+      try { localStorage.removeItem("ds_avatar"); } catch (e) {}
+      applyUser();
+      openApp("profile");
+    };
+    body.querySelector("#pf-save").onclick = () => {
+      const n = (body.querySelector("#pf-name").value || "").trim() || "Guest";
+      user = { name: n, initials: initials(n) };
+      try { localStorage.setItem("ds_user", JSON.stringify(user)); } catch (e) {}
+      applyUser();
+      openApp("profile");
+    };
+    body.querySelectorAll(".tog").forEach(tog => {
+      tog.onclick = () => {
+        const k = tog.dataset.k;
+        if (k === "welcome") settings.welcome = !(settings.welcome !== false);
+        else settings[k] = !settings[k];
+        tog.classList.toggle("on", k === "welcome" ? settings.welcome !== false : !!settings[k]);
+        try { localStorage.setItem("ds_set", JSON.stringify(settings)); } catch (e) {}
+        if (k === "chip") document.getElementById("chip").style.display = settings.chip && user ? "flex" : "none";
+      };
+    });
+    body.querySelector("#pf-uploads").onclick = () => openPath("Desktop/Uploads");
+    body.querySelector("#pf-desktop").onclick = () => openPath("Desktop");
+    body.querySelector("#pf-auth").onclick = () => {
+      if (user) signOut();
+      else document.getElementById("lock").classList.remove("hide");
+    };
+
+  } else if (app === "settings") {
+    body.innerHTML = `<div class="ap"><h3>Settings</h3>
+      <div class="srow"><span>Show user chip</span><div class="tog ${settings.chip ? "on" : ""}" data-k="chip"></div></div>
+      <div class="srow"><span>Signed in as</span><strong>${esc(user ? user.name : "Guest")}</strong></div>
+      <h3 style="margin-top:16px">Desktop background</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="abtn pri" type="button" id="set-bg">Change background</button>
+        <button class="abtn" type="button" id="set-bg-reset">Reset background</button>
+      </div>
+      <h3>Admin portrait</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="abtn" type="button" id="set-photo">Photo</button>
+        <button class="abtn" type="button" id="set-video">Video</button>
+        <button class="abtn" type="button" id="set-mute">${portraitMuted ? "Unmute video" : "Mute video"}</button>
+        <button class="abtn" type="button" id="set-portrait-reset">Reset portrait</button>
+      </div>
+      <div style="margin-top:14px"><button class="abtn" id="sauth">${user ? "Sign out" : "Sign in"}</button></div>
+      <p style="margin-top:14px;font-size:11px;color:var(--muted)">Doashow Desktop · callmecoffee3</p></div>`;
+    body.querySelector(".tog").onclick = function () {
+      settings.chip = !settings.chip;
+      this.classList.toggle("on", settings.chip);
+      localStorage.setItem("ds_set", JSON.stringify(settings));
+      document.getElementById("chip").style.display = settings.chip && user ? "flex" : "none";
+    };
+    body.querySelector("#sauth").onclick = () => {
+      if (user) signOut();
+      else document.getElementById("lock").classList.remove("hide");
+    };
+    const setBg = body.querySelector("#set-bg");
+    const setBgR = body.querySelector("#set-bg-reset");
+    if (setBg) setBg.onclick = () => document.getElementById("bg-input").click();
+    if (setBgR) setBgR.onclick = () => {
+      desktopBg = null;
+      try { localStorage.removeItem("ds_desktop_bg"); } catch (e) {}
+      applyBackground();
+    };
+    const setPhoto = body.querySelector("#set-photo");
+    const setVideo = body.querySelector("#set-video");
+    const setMute = body.querySelector("#set-mute");
+    const setPR = body.querySelector("#set-portrait-reset");
+    if (setPhoto) setPhoto.onclick = () => document.getElementById("portrait-input").click();
+    if (setVideo) setVideo.onclick = () => document.getElementById("portrait-video-input").click();
+    if (setMute) setMute.onclick = () => {
+      portraitMuted = !portraitMuted;
+      try { localStorage.setItem("ds_portrait_muted", portraitMuted ? "1" : "0"); } catch (e) {}
+      applyPortrait();
+      openApp("settings");
+    };
+    if (setPR) setPR.onclick = () => {
+      portraitUrl = null; portraitVideo = null;
+      try { localStorage.removeItem("ds_portrait"); localStorage.removeItem("ds_portrait_video"); } catch (e) {}
+      applyPortrait();
+    };
+  }
+}
+
+/* ═══════════ Upload ═══════════ */
+document.getElementById("uploader").onchange = async e => {
+  const files = Array.from(e.target.files || []);
+  e.target.value = "";
+  if (!files.length) return;
+  let path = uploadPath || "Desktop/Uploads";
+  let ch = ensure(path);
+  if (!ch) {
+    const desk = ensure("Desktop");
+    if (desk && !desk.Uploads) desk.Uploads = { type: "folder", children: {} };
+    ch = ensure("Desktop/Uploads");
+    path = "Desktop/Uploads";
+  }
+  if (!ch) return;
+  for (const file of files) {
+    let name = file.name;
+    let n = 1;
+    while (ch[name]) {
+      const bits = file.name.split(".");
+      const ext = bits.length > 1 ? "." + bits.pop() : "";
+      name = `${bits.join(".") || "file"} (${n})${ext}`;
+      n++;
+    }
+    const isText = /\.(txt|md|json|csv|html|css|js)$/i.test(file.name) || (file.type || "").startsWith("text/");
+    if (isText && file.size < 500000) {
+      ch[name] = { type: "file", content: await file.text() };
+    } else if ((file.type || "").startsWith("image/") && file.size < 2e6) {
+      const dataUrl = await new Promise(res => {
+        const r = new FileReader();
+        r.onload = () => res(r.result);
+        r.readAsDataURL(file);
+      });
+      ch[name] = { type: "upload", mime: file.type, dataUrl, content: "[image]" };
+    } else {
+      ch[name] = { type: "upload", mime: file.type || "application/octet-stream", content: `[uploaded: ${file.name}, ${file.size} bytes]` };
+    }
+  }
+  if (uploadBody && document.body.contains(uploadBody)) paintFolder(uploadBody, path);
+  else openPath(path);
+  if (path.startsWith("Desktop")) paintIcons();
+  uploadBody = null;
+};
+
+/* ═══════════ Window ops ═══════════ */
+function focus(id) {
+  wins.forEach((w, wid) => w.el.classList.toggle("on", wid === id));
+  const w = wins.get(id);
+  if (w) {
+    w.el.style.zIndex = ++z;
+    if (w.min) { w.min = false; w.el.style.display = ""; }
+  }
+  active = id;
+  paintBar();
+}
+function close(id) {
+  const w = wins.get(id);
+  if (!w) return;
+  w.el.remove();
+  wins.delete(id);
+  if (active === id) active = null;
+  paintBar();
+}
+function minimize(id) {
+  const w = wins.get(id);
+  if (!w) return;
+  w.min = true;
+  w.el.style.display = "none";
+  w.el.classList.remove("on");
+  if (active === id) active = null;
+  paintBar();
+}
+function drag(win) {
+  const bar = win.querySelector(".tb");
+  let ox = 0, oy = 0, on = false;
+  bar.onmousedown = e => {
+    if (e.target.closest("button") || win.classList.contains("max")) return;
+    on = true;
+    ox = e.clientX - win.offsetLeft;
+    oy = e.clientY - win.offsetTop;
+    focus(win.dataset.id);
+    e.preventDefault();
+  };
+  window.addEventListener("mousemove", e => {
+    if (!on) return;
+    win.style.left = Math.max(0, e.clientX - ox) + "px";
+    win.style.top = Math.max(0, e.clientY - oy) + "px";
+  });
+  window.addEventListener("mouseup", () => { on = false; });
+}
+function resize(win) {
+  const h = win.querySelector(".rh");
+  let on = false, sx, sy, sw, sh;
+  h.onmousedown = e => {
+    if (win.classList.contains("max")) return;
+    on = true; sx = e.clientX; sy = e.clientY;
+    sw = win.offsetWidth; sh = win.offsetHeight;
+    focus(win.dataset.id);
+    e.preventDefault(); e.stopPropagation();
+  };
+  window.addEventListener("mousemove", e => {
+    if (!on) return;
+    win.style.width = Math.max(270, sw + e.clientX - sx) + "px";
+    win.style.height = Math.max(170, sh + e.clientY - sy) + "px";
+  });
+  window.addEventListener("mouseup", () => { on = false; });
+}
+function paintBar() {
+  const apps = document.getElementById("bar-apps");
+  apps.innerHTML = "";
+  wins.forEach((w, id) => {
+    const name = parts(w.path).pop();
+    const btn = document.createElement("button");
+    btn.className = "open" + (id === active && !w.min ? " act" : "");
+    btn.textContent = name;
+    btn.onclick = () => {
+      if (w.min || id !== active) focus(id);
+      else minimize(id);
+    };
+    apps.appendChild(btn);
+  });
+}
+
+/* ═══════════ Start ═══════════ */
+function toggleStart() {
+  const m = document.getElementById("start");
+  const b = document.getElementById("start-btn");
+  const open = m.classList.toggle("open");
+  b.classList.toggle("on", open);
+}
+function closeStart() {
+  document.getElementById("start").classList.remove("open");
+  document.getElementById("start-btn").classList.remove("on");
+}
+
+document.getElementById("start-btn").onclick = e => { e.stopPropagation(); toggleStart(); };
+document.querySelectorAll(".start-apps button").forEach(btn => {
+  btn.onclick = () => {
+    const a = btn.dataset.a;
+    closeStart();
+    if (a === "files") openPath("Desktop");
+    else if (a === "uploads") openPath("Desktop/Uploads");
+    else if (a === "power") powerDown();
+    else if (a === "upload") {
+      uploadPath = "Desktop/Uploads";
+      uploadBody = null;
+      document.getElementById("uploader").click();
+    } else openApp(a);
+  };
+});
+document.getElementById("start-about").onclick = () => {
+  closeStart();
+  if (!FS.Desktop.children["About.txt"]) {
+    FS.Desktop.children["About.txt"] = {
+      type: "file",
+      content: "Doashow Desktop\n\nCalm simulated desktop.\nFolders, files, uploads, notes, tasks, calendar, clock, settings, sign-in.\n\nMade by callmecoffee3\nMatt Grosso Studios"
+    };
+    paintIcons();
+  }
+  openPath("Desktop/About.txt");
+};
+document.getElementById("start-auth").onclick = () => {
+  closeStart();
+  if (user) signOut();
+  else document.getElementById("lock").classList.remove("hide");
+};
+
+document.getElementById("desk").onclick = e => {
+  if (e.target.closest(".pic") || e.target.closest(".icon") || e.target.closest(".win") || e.target.closest("#start") || e.target.closest("#bar")) return;
+  document.querySelectorAll(".icon").forEach(i => i.classList.remove("sel"));
+  closeStart();
+};
+document.getElementById("pic").ondblclick = () => openPath("Desktop/Portrait");
+document.getElementById("pic").onclick = e => e.stopPropagation();
+document.getElementById("bar-clock").onclick = () => openApp("clock");
+
+document.getElementById("lock-go").addEventListener("click", function (e) {
+  e.preventDefault();
+  signIn(document.getElementById("lock-name").value, false);
+});
+document.getElementById("lock-guest").addEventListener("click", function (e) {
+  e.preventDefault();
+  signIn("Guest", true);
+});
+document.getElementById("lock-name").addEventListener("keydown", function (e) {
+  if (e.key === "Enter") { e.preventDefault(); signIn(this.value, false); }
+});
+document.getElementById("lock-pass").addEventListener("keydown", function (e) {
+  if (e.key === "Enter") { e.preventDefault(); signIn(document.getElementById("lock-name").value, false); }
+});
+document.getElementById("chip-out").addEventListener("click", function (e) { e.stopPropagation(); signOut(); });
+document.getElementById("chip").addEventListener("click", function (e) {
+  if (e.target.closest("#chip-out")) return;
+  openApp("profile");
+});
+
+function tick() {
+  document.getElementById("bar-clock").textContent =
+    new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+
+/* ═══════════ Context menu wiring ═══════════ */
+(function () {
+  const ctx = document.getElementById("ctx");
+  if (!ctx) return;
+  function openCtx(x, y) {
+    ctx.style.left = Math.min(x, window.innerWidth - 180) + "px";
+    ctx.style.top = Math.min(y, window.innerHeight - 180) + "px";
+    ctx.classList.add("open");
+  }
+  function closeCtx() { ctx.classList.remove("open"); }
+
+  document.getElementById("desk").addEventListener("contextmenu", function (e) {
+    if (e.target.closest(".win") || e.target.closest("#start") || e.target.closest("#bar") || e.target.closest(".pic") || e.target.closest("#ctx")) return;
+    e.preventDefault();
+    try { closeStart(); } catch (err) {}
+    openCtx(e.clientX, e.clientY);
+  });
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest("#ctx")) closeCtx();
+  });
+  ctx.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      const act = this.dataset.ctx;
+      closeCtx();
+      if (act === "folder") openDeskCreate("folder");
+      else if (act === "file") openDeskCreate("file");
+      else if (act === "upload") {
+        uploadPath = "Desktop";
+        uploadBody = null;
+        document.getElementById("uploader").click();
+      } else if (act === "refresh") paintIcons();
+      else if (act === "bg") document.getElementById("bg-input").click();
+      else if (act === "bg-reset") {
+        desktopBg = null;
+        try { localStorage.removeItem("ds_desktop_bg"); } catch (err) {}
+        applyBackground();
+      }
+    });
+  });
+})();
+
+
+/* Desktop action buttons */
+(function () {
+  const bf = document.getElementById("da-folder");
+  const bfi = document.getElementById("da-file");
+  const bu = document.getElementById("da-upload");
+  if (bf) bf.addEventListener("click", function (e) {
+    e.stopPropagation();
+    openDeskCreate("folder");
+  });
+  if (bfi) bfi.addEventListener("click", function (e) {
+    e.stopPropagation();
+    openDeskCreate("file");
+  });
+  if (bu) bu.addEventListener("click", function (e) {
+    e.stopPropagation();
+    closeDeskCreate();
+    uploadPath = "Desktop";
+    uploadBody = null;
+    document.getElementById("uploader").click();
+  });
+})();
+document.getElementById("desk").addEventListener("click", function (e) {
+  if (!e.target.closest("#desk-create") && !e.target.closest("#desk-actions")) closeDeskCreate();
+});
+
+
+/* ═══════════ Taskbar dock / float ═══════════ */
+(function () {
+  const bar = document.getElementById("bar");
+  const grip = document.getElementById("dock-grip");
+  const menu = document.getElementById("dock-menu");
+  if (!bar || !grip || !menu) return;
+
+  let mode = "bottom";
+  try { mode = localStorage.getItem("ds_dock") || "bottom"; } catch (e) {}
+
+  function applyDock(m) {
+    mode = m;
+    try { localStorage.setItem("ds_dock", m); } catch (e) {}
+    bar.classList.remove("dock-bottom", "dock-top", "dock-left", "dock-right", "floating");
+    document.body.classList.remove("bar-top", "bar-left", "bar-right");
+    bar.style.left = "";
+    bar.style.top = "";
+    bar.style.right = "";
+    bar.style.bottom = "";
+    if (m === "float") {
+      bar.classList.add("floating");
+      if (!bar.style.left) {
+        bar.style.left = "50%";
+        bar.style.bottom = "16px";
+        bar.style.transform = "translateX(-50%)";
+      }
+    } else {
+      bar.style.transform = "";
+      bar.classList.add("dock-" + m);
+      if (m === "top") document.body.classList.add("bar-top");
+      if (m === "left") document.body.classList.add("bar-left");
+      if (m === "right") document.body.classList.add("bar-right");
+    }
+    menu.classList.remove("open");
+  }
+
+  applyDock(mode === "float" ? "float" : mode);
+
+  grip.addEventListener("click", function (e) {
+    e.stopPropagation();
+    menu.classList.toggle("open");
+  });
+  menu.querySelectorAll("[data-dock]").forEach(btn => {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      applyDock(this.dataset.dock);
+    });
+  });
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest("#dock-menu") && !e.target.closest("#dock-grip")) {
+      menu.classList.remove("open");
+    }
+  });
+
+  // drag to float
+  let dragging = false, ox = 0, oy = 0;
+  grip.addEventListener("mousedown", function (e) {
+    if (e.button !== 0) return;
+    // only start drag after small move
+    const sx = e.clientX, sy = e.clientY;
+    function onMove(ev) {
+      if (!dragging) {
+        if (Math.abs(ev.clientX - sx) < 4 && Math.abs(ev.clientY - sy) < 4) return;
+        dragging = true;
+        menu.classList.remove("open");
+        bar.classList.remove("dock-bottom", "dock-top", "dock-left", "dock-right");
+        bar.classList.add("floating");
+        document.body.classList.remove("bar-top", "bar-left", "bar-right");
+        bar.style.transform = "";
+        const rect = bar.getBoundingClientRect();
+        bar.style.left = rect.left + "px";
+        bar.style.top = rect.top + "px";
+        bar.style.bottom = "auto";
+        bar.style.right = "auto";
+        ox = ev.clientX - rect.left;
+        oy = ev.clientY - rect.top;
+        mode = "float";
+        try { localStorage.setItem("ds_dock", "float"); } catch (err) {}
+      }
+      bar.style.left = Math.max(0, Math.min(window.innerWidth - 80, ev.clientX - ox)) + "px";
+      bar.style.top = Math.max(0, Math.min(window.innerHeight - 40, ev.clientY - oy)) + "px";
+    }
+    function onUp() {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      dragging = false;
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    e.preventDefault();
+  });
+})();
+
+
+/* ═══════════ Power ═══════════ */
+function powerDown() {
+  const el = document.getElementById("power");
+  const msg = document.getElementById("power-msg");
+  const btn = document.getElementById("power-up");
+  if (!el) return;
+  el.classList.add("on");
+  btn.style.display = "none";
+  msg.textContent = "Shutting down…";
+  setTimeout(() => {
+    msg.textContent = "Powered off";
+    btn.style.display = "inline-block";
+  }, 1200);
+}
+function powerUp() {
+  const el = document.getElementById("power");
+  const msg = document.getElementById("power-msg");
+  const btn = document.getElementById("power-up");
+  if (!el) return;
+  msg.textContent = "Starting Doashow…";
+  btn.style.display = "none";
+  setTimeout(() => {
+    el.classList.remove("on");
+    msg.textContent = "Shutting down…";
+  }, 900);
+}
+document.getElementById("power-up").addEventListener("click", powerUp);
+
+/* Profile pic change */
+document.getElementById("pf-pic-input").addEventListener("change", function (e) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!file || !file.type.startsWith("image/")) return;
+  if (file.size > 1.5e6) { alert("Image too large (max ~1.5MB)"); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    avatarUrl = reader.result;
+    try { localStorage.setItem("ds_avatar", avatarUrl); } catch (err) {}
+    applyUser();
+    // refresh open profile window if any
+    for (const [id, w] of wins) {
+      if (w.app === "profile" || w.path === "App/profile") {
+        try { paintApp(w.el.querySelector(".body"), "profile"); } catch (err) {}
+      }
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
+
+/* ═══════════ Desktop portrait (admin) ═══════════ */
+function applyPortrait() {
+  const art = document.getElementById("pic-art");
+  if (!art) return;
+  art.classList.remove("has-img", "has-video");
+  if (portraitVideo) {
+    art.classList.add("has-video");
+    art.innerHTML = `<video src="${portraitVideo}" autoplay loop playsinline ${portraitMuted ? "muted" : ""}></video>
+      <span class="vid-badge">${portraitMuted ? "MUTED" : "SOUND"}</span>`;
+    const v = art.querySelector("video");
+    if (v) {
+      v.muted = !!portraitMuted;
+      v.play().catch(() => {});
+    }
+  } else if (portraitUrl) {
+    art.classList.add("has-img");
+    art.innerHTML = `<img src="${portraitUrl}" alt="Admin portrait" />`;
+  } else {
+    art.innerHTML = `<svg viewBox="0 0 80 80" width="68" height="68" fill="none">
+      <rect x="8" y="8" width="64" height="64" rx="14" fill="#0A0A0A" stroke="#C8A951" stroke-width="1.5"/>
+      <text x="40" y="48" text-anchor="middle" font-family="Manrope,system-ui,sans-serif" font-weight="800" font-size="22" fill="#C8A951">MG</text>
+    </svg>`;
+  }
+}
+function setPortraitFromFile(file) {
+  if (!file || !file.type.startsWith("image/")) return;
+  if (file.size > 2e6) { alert("Image too large (max ~2MB)"); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    portraitUrl = reader.result;
+    try { localStorage.setItem("ds_portrait", portraitUrl); } catch (e) {}
+    applyPortrait();
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById("portrait-video-input").addEventListener("change", function (e) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!file || !file.type.startsWith("video/")) return;
+  if (file.size > 12e6) { alert("Video too large (max ~12MB for local save)"); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    portraitVideo = reader.result;
+    try { localStorage.setItem("ds_portrait_video", portraitVideo); } catch (err) {
+      alert("Could not save video (storage full). It will play this session only.");
+    }
+    applyPortrait();
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById("portrait-input").addEventListener("change", function (e) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (file) setPortraitFromFile(file);
+});
+
+(function () {
+  const pic = document.getElementById("pic");
+  const ctx = document.getElementById("pic-ctx");
+  if (!pic || !ctx) return;
+  pic.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    ctx.style.left = Math.min(e.clientX, window.innerWidth - 190) + "px";
+    ctx.style.top = Math.min(e.clientY, window.innerHeight - 140) + "px";
+    ctx.classList.add("open");
+  });
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest("#pic-ctx")) ctx.classList.remove("open");
+  });
+  ctx.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      const act = this.dataset.pact;
+      ctx.classList.remove("open");
+      if (act === "change") document.getElementById("portrait-input").click();
+      else if (act === "video") document.getElementById("portrait-video-input").click();
+      else if (act === "mute") {
+        portraitMuted = !portraitMuted;
+        try { localStorage.setItem("ds_portrait_muted", portraitMuted ? "1" : "0"); } catch (err) {}
+        applyPortrait();
+      } else if (act === "reset") {
+        portraitUrl = null;
+        portraitVideo = null;
+        try {
+          localStorage.removeItem("ds_portrait");
+          localStorage.removeItem("ds_portrait_video");
+        } catch (err) {}
+        applyPortrait();
+      } else if (act === "note") {
+        const n = document.getElementById("pic-note");
+        if (n) { n.focus(); }
+      } else if (act === "bg") document.getElementById("bg-input").click();
+      else if (act === "bg-reset") {
+        desktopBg = null;
+        try { localStorage.removeItem("ds_desktop_bg"); } catch (err) {}
+        applyBackground();
+      } else if (act === "open") openPath("Desktop/Portrait");
+    });
+  });
+})();
+
+
+/* ═══════════ Desktop background + portrait note ═══════════ */
+function applyBackground() {
+  const desk = document.getElementById("desk");
+  if (!desk) return;
+  if (desktopBg) {
+    desk.style.backgroundImage = `linear-gradient(rgba(244,240,232,0.35), rgba(244,240,232,0.5)), url("${desktopBg}")`;
+    desk.style.backgroundSize = "cover";
+    desk.style.backgroundPosition = "center";
+    desk.style.backgroundRepeat = "no-repeat";
+  } else {
+    desk.style.backgroundImage = "";
+    desk.style.backgroundSize = "";
+    desk.style.backgroundPosition = "";
+    desk.style.backgroundRepeat = "";
+  }
+}
+function applyPortraitNote() {
+  const el = document.getElementById("pic-note");
+  if (!el) return;
+  el.textContent = portraitNote || "";
+  if (!portraitNote) el.setAttribute("data-empty", "1");
+  else el.removeAttribute("data-empty");
+}
+function savePortraitNote() {
+  const el = document.getElementById("pic-note");
+  if (!el) return;
+  portraitNote = (el.innerText || "").trim();
+  try { localStorage.setItem("ds_portrait_note", portraitNote); } catch (e) {}
+}
+
+(function () {
+  const note = document.getElementById("pic-note");
+  if (note) {
+    note.addEventListener("blur", savePortraitNote);
+    note.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        note.blur();
+      }
+    });
+  }
+  const bgIn = document.getElementById("bg-input");
+  if (bgIn) {
+    bgIn.addEventListener("change", function (e) {
+      const file = e.target.files && e.target.files[0];
+      e.target.value = "";
+      if (!file || !file.type.startsWith("image/")) return;
+      if (file.size > 3e6) { alert("Background too large (max ~3MB)"); return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        desktopBg = reader.result;
+        try { localStorage.setItem("ds_desktop_bg", desktopBg); } catch (err) {}
+        applyBackground();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+})();
+
+applyPortrait();
+applyPortraitNote();
+applyBackground();
+/* ═══════════ Boot ═══════════ */
+applyUser();
+if (!user) {
+  const lock = document.getElementById("lock");
+  if (lock) {
+    lock.classList.remove("hide");
+    lock.style.display = "flex";
+    lock.style.visibility = "visible";
+    lock.style.opacity = "1";
+    lock.style.pointerEvents = "auto";
+  }
+} else {
+  hideLock();
+}
+paintIcons();
+tick();
+setInterval(tick, 30000);
+if (user) setTimeout(() => { try { openPath("Desktop/welcome.md"); } catch (e) {} }, 250);
+</script>
+</body>
+</html>
