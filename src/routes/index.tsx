@@ -6,7 +6,7 @@ function Home() {
   return (
     <iframe
       title="Doashow Desktop"
-      src="/desktop.html"
+      src="/desktop.html?v=edit2"
       className="desktop-frame"
     />
   );

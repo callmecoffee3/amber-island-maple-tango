@@ -215,10 +215,16 @@ html, body {
 
 .filev h3 { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
 .filev .meta { font-size: 11px; color: var(--muted); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-.filev pre {
-  background: #f0ebe3; border: 1px solid var(--border); border-radius: 8px;
-  padding: 12px; font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; overflow: auto;
+.filev textarea.editor {
+  width: 100%; min-height: 220px; resize: vertical;
+  background: #fff; border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px; font-family: ui-monospace, monospace; font-size: 13px;
+  color: var(--text); outline: none; line-height: 1.45;
+  user-select: text; -webkit-user-select: text;
 }
+.filev textarea.editor:focus { border-color: var(--accent); }
+.filev .saved { font-size: 11px; color: var(--muted); margin-left: 4px; }
+
 .filev img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); }
 
 .picv { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 6px; }
@@ -495,7 +501,9 @@ html, body {
   background: #fff; font-size: 10px; cursor: pointer; padding: 0;
   display: grid; place-items: center; line-height: 1;
 }
-.fitem .acts button:hover { background: var(--titlebar); }
+.fitem .acts button.edit {
+  width: auto; min-width: 32px; padding: 0 4px; font-size: 9px; font-weight: 700;
+}
 .fitem .acts button.del:hover { background: #c45c5c; color: #fff; border-color: #c45c5c; }
 .fitem.selected { background: rgba(139,115,85,.18); outline: 1px solid var(--accent-soft, #c4a882); }
 
@@ -761,6 +769,7 @@ body.bar-right .desk-actions { }
   <div class="desk-actions" id="desk-actions">
     <button class="pri" id="da-folder" title="New folder on desktop">+ Folder</button>
     <button id="da-file" title="New file on desktop">+ File</button>
+    <button id="da-browser" title="Open the file browser">File Browser</button>
     <button id="da-upload" title="Upload to desktop">Upload</button>
   </div>
 
@@ -811,7 +820,7 @@ body.bar-right .desk-actions { }
     <button data-a="clock"><span class="sg">🕐</span>Clock</button>
     <button data-a="calculator"><span class="sg">🧮</span>Calculator</button>
     <button data-a="settings"><span class="sg">⚙️</span>Settings</button>
-    <button data-a="files"><span class="sg">📁</span>Files</button>
+    <button data-a="files"><span class="sg">📁</span>File Browser</button>
     <button data-a="uploads"><span class="sg">📂</span>Uploads</button>
     <button data-a="upload"><span class="sg">⬆️</span>Upload</button>
     <button data-a="power"><span class="sg">⏻</span>Power</button>
@@ -864,7 +873,7 @@ body.bar-right .desk-actions { }
 
 <script>
 /* ═══════════ State ═══════════ */
-const FS = {
+const FS_DEFAULT = {
   Desktop: {
     type: "folder",
     children: {
@@ -948,6 +957,18 @@ const FS = {
     }
   }
 };
+
+let FS = FS_DEFAULT;
+try {
+  const savedFs = localStorage.getItem("ds_fs");
+  if (savedFs) {
+    const parsed = JSON.parse(savedFs);
+    if (parsed && parsed.Desktop && parsed.Desktop.type === "folder") FS = parsed;
+  }
+} catch (e) {}
+function saveFS() {
+  try { localStorage.setItem("ds_fs", JSON.stringify(FS)); } catch (e) {}
+}
 
 let user = null;
 let tasks = [];
@@ -1302,6 +1323,7 @@ function wire(win, id) {
 }
 
 function paintFolder(body, path) {
+  saveFS();
   // Build full folder tree from Desktop
   function collectTree(base, n, depth, out) {
     if (!n || n.type !== "folder") return;
@@ -1349,7 +1371,7 @@ function paintFolder(body, path) {
     <button class="abtn pri" type="button" id="move-go">Move</button>
     <button class="abtn" type="button" id="move-cancel">Cancel</button>
   </div>
-  <p class="preview-note">Double-click folder to open here · Double-click file to read · Tree opens any folder</p>`;
+  <p class="preview-note">Double-click a file to edit it · Double-click a folder to open it · Hover a file and press Edit</p>`;
 
   if (!names.length) {
     main += `<div class="empty"><span>📂</span>Empty — use + Folder or + File above</div>`;
@@ -1359,6 +1381,7 @@ function paintFolder(body, path) {
       const attrName = String(name).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
       main += `<div class="fitem" data-open="${path}/${name}" data-name="${attrName}" data-type="${c[name].type}">
         <div class="acts">
+          ${c[name].type === "folder" ? "" : `<button type="button" class="edit" data-act="edit" title="Edit file">Edit</button>`}
           <button type="button" data-act="ren" title="Rename">✎</button>
           <button type="button" data-act="mov" title="Move">⇪</button>
           <button type="button" class="del" data-act="del" title="Delete">✕</button>
@@ -1567,7 +1590,7 @@ function paintFolder(body, path) {
         // open subfolder in SAME window
         navTo(target);
       } else {
-        // open file in a new window to read, keep folder open
+        // open file in the editor, keep the folder open
         openPath(target);
       }
     };
@@ -1581,6 +1604,7 @@ function paintFolder(body, path) {
       if (!name) return;
       const act = btn.dataset.act;
       if (act === "del") deleteItem(name);
+      else if (act === "edit") openPath(path + "/" + name);
       else if (act === "ren") renameItem(name);
       else if (act === "mov") startMove(name);
     };
@@ -1604,22 +1628,21 @@ function paintFolder(body, path) {
 function paintFile(body, path, n) {
   const name = parts(path).pop();
   const parent = parts(path).slice(0, -1).join("/") || "Desktop";
-  let content = "";
-  if (n.type === "upload" && n.dataUrl && (n.mime || "").startsWith("image/")) {
-    content = `<img src="${n.dataUrl}" alt="" />`;
-  } else {
-    content = `<pre>${esc(n.content || "")}</pre>`;
-  }
+  const isImage = n.type === "upload" && n.dataUrl && (n.mime || "").startsWith("image/");
+  const bodyHtml = isImage
+    ? `<img src="${n.dataUrl}" alt="" />`
+    : `<textarea class="editor" id="file-editor" spellcheck="false">${esc(n.content || "")}</textarea>`;
   body.innerHTML = `<div class="filev">
     <div class="fbar" style="margin-bottom:10px">
       <button type="button" class="abtn" data-back="${parent}">← Back to folder</button>
       <button type="button" class="abtn" data-open-parent="${parent}">Open folder window</button>
+      ${isImage ? "" : `<button type="button" class="abtn pri" id="file-save">Save</button><span class="saved" id="file-saved"></span>`}
     </div>
     <h3>${esc(name)}</h3>
     <div class="meta">${esc(path)}</div>
-    ${content}
+    ${bodyHtml}
   </div>`;
-  body.querySelector("[data-back]").onclick = () => {
+  const goParent = () => {
     const winId = body.closest(".win").dataset.id;
     const w = wins.get(winId);
     if (!w) return;
@@ -1632,9 +1655,30 @@ function paintFile(body, path, n) {
     paintFolder(body, parentPath);
     paintBar();
   };
+  body.querySelector("[data-back]").onclick = goParent;
   body.querySelector("[data-open-parent]").onclick = () => {
     openPath(body.querySelector("[data-open-parent]").dataset.openParent);
   };
+  const saveBtn = body.querySelector("#file-save");
+  if (saveBtn) {
+    const editor = body.querySelector("#file-editor");
+    const write = () => {
+      const item = node(path);
+      if (!item) return;
+      item.content = editor.value;
+      if (item.type === "upload") item.type = "file";
+      saveFS();
+      const msg = body.querySelector("#file-saved");
+      if (msg) {
+        msg.textContent = "Saved";
+        setTimeout(() => { if (msg) msg.textContent = ""; }, 1200);
+      }
+    };
+    saveBtn.onclick = write;
+    editor.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); write(); }
+    });
+  }
 }
 
 function paintPic(body) {
@@ -2381,6 +2425,7 @@ function tick() {
   const bf = document.getElementById("da-folder");
   const bfi = document.getElementById("da-file");
   const bu = document.getElementById("da-upload");
+  const bb = document.getElementById("da-browser");
   if (bf) bf.addEventListener("click", function (e) {
     e.stopPropagation();
     openDeskCreate("folder");
@@ -2388,6 +2433,11 @@ function tick() {
   if (bfi) bfi.addEventListener("click", function (e) {
     e.stopPropagation();
     openDeskCreate("file");
+  });
+  if (bb) bb.addEventListener("click", function (e) {
+    e.stopPropagation();
+    closeDeskCreate();
+    openPath("Desktop");
   });
   if (bu) bu.addEventListener("click", function (e) {
     e.stopPropagation();
