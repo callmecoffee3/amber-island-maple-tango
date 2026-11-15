@@ -27,6 +27,50 @@
   --radius: 11px;
   --font: "Manrope", system-ui, sans-serif;
 }
+html.night {
+  --desktop: #12110e;
+  --panel: #1c1a16;
+  --border: #3a342c;
+  --border-dark: #524838;
+  --text: #f3ead8;
+  --muted: #b3a898;
+  --accent: #d4b56a;
+  --titlebar: #242017;
+  --titlebar-on: #2e281e;
+  --shadow: 0 10px 36px rgba(0,0,0,.45);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,.35);
+}
+html.night body,
+html.night #desk { color: var(--text); }
+html.night .fbar,
+html.night .folder-tree,
+html.night .create-box,
+html.night input,
+html.night textarea,
+html.night select,
+html.night .hit,
+html.night .task,
+html.night .note,
+html.night .fitem .fg,
+html.night .filev textarea.editor,
+html.night .abtn,
+html.night .fbar button,
+html.night .calc .keys button:not(.op):not(.eq) {
+  background: #241f18;
+  color: var(--text);
+  border-color: var(--border);
+}
+html.night #bar,
+html.night #start,
+html.night .user-chip,
+html.night #ctx,
+html.night .pic-ctx,
+html.night #desk-create {
+  background: rgba(22,20,16,.94);
+  color: var(--text);
+}
+html.night .icon .l { text-shadow: none; }
+html.night .lock-card input { background: #241f18; color: var(--text); }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
   height: 100%; overflow: hidden;
@@ -770,6 +814,7 @@ body.bar-right .desk-actions { }
     <button class="pri" id="da-folder" title="New folder on desktop">+ Folder</button>
     <button id="da-file" title="New file on desktop">+ File</button>
     <button id="da-browser" title="Open the file browser">File Browser</button>
+    <button id="da-refresh" title="Reload the desktop">Refresh</button>
     <button id="da-upload" title="Upload to desktop">Upload</button>
   </div>
 
@@ -2043,6 +2088,7 @@ function paintApp(body, app) {
 
   } else if (app === "settings") {
     body.innerHTML = `<div class="ap"><h3>Settings</h3>
+      <div class="srow"><span>Night mode</span><div class="tog ${settings.night ? "on" : ""}" data-k="night"></div></div>
       <div class="srow"><span>Show user chip</span><div class="tog ${settings.chip ? "on" : ""}" data-k="chip"></div></div>
       <div class="srow"><span>Signed in as</span><strong>${esc(user ? user.name : "Guest")}</strong></div>
       <h3 style="margin-top:16px">Desktop background</h3>
@@ -2059,12 +2105,16 @@ function paintApp(body, app) {
       </div>
       <div style="margin-top:14px"><button class="abtn" id="sauth">${user ? "Sign out" : "Sign in"}</button></div>
       <p style="margin-top:14px;font-size:11px;color:var(--muted)">Doashow Desktop · callmecoffee3</p></div>`;
-    body.querySelector(".tog").onclick = function () {
-      settings.chip = !settings.chip;
-      this.classList.toggle("on", settings.chip);
-      localStorage.setItem("ds_set", JSON.stringify(settings));
-      document.getElementById("chip").style.display = settings.chip && user ? "flex" : "none";
-    };
+    body.querySelectorAll(".tog").forEach(tog => {
+      tog.onclick = function () {
+        const k = this.dataset.k;
+        settings[k] = !settings[k];
+        this.classList.toggle("on", !!settings[k]);
+        localStorage.setItem("ds_set", JSON.stringify(settings));
+        if (k === "chip") document.getElementById("chip").style.display = settings.chip && user ? "flex" : "none";
+        if (k === "night") applyTheme();
+      };
+    });
     body.querySelector("#sauth").onclick = () => {
       if (user) signOut();
       else document.getElementById("lock").classList.remove("hide");
@@ -2408,7 +2458,7 @@ function tick() {
         uploadPath = "Desktop";
         uploadBody = null;
         document.getElementById("uploader").click();
-      } else if (act === "refresh") paintIcons();
+      } else if (act === "refresh") location.reload();
       else if (act === "bg") document.getElementById("bg-input").click();
       else if (act === "bg-reset") {
         desktopBg = null;
@@ -2426,6 +2476,7 @@ function tick() {
   const bfi = document.getElementById("da-file");
   const bu = document.getElementById("da-upload");
   const bb = document.getElementById("da-browser");
+  const br = document.getElementById("da-refresh");
   if (bf) bf.addEventListener("click", function (e) {
     e.stopPropagation();
     openDeskCreate("folder");
@@ -2438,6 +2489,10 @@ function tick() {
     e.stopPropagation();
     closeDeskCreate();
     openPath("Desktop");
+  });
+  if (br) br.addEventListener("click", function (e) {
+    e.stopPropagation();
+    location.reload();
   });
   if (bu) bu.addEventListener("click", function (e) {
     e.stopPropagation();
@@ -2702,11 +2757,17 @@ document.getElementById("portrait-input").addEventListener("change", function (e
 
 
 /* ═══════════ Desktop background + portrait note ═══════════ */
+function applyTheme() {
+  document.documentElement.classList.toggle("night", !!settings.night);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", settings.night ? "#12110e" : "#f4f0e8");
+}
 function applyBackground() {
   const desk = document.getElementById("desk");
   if (!desk) return;
   if (desktopBg) {
-    desk.style.backgroundImage = `linear-gradient(rgba(244,240,232,0.35), rgba(244,240,232,0.5)), url("${desktopBg}")`;
+    const wash = settings.night ? "rgba(12,11,9,0.55), rgba(12,11,9,0.62)" : "rgba(244,240,232,0.35), rgba(244,240,232,0.5)";
+    desk.style.backgroundImage = `linear-gradient(${wash}), url("${desktopBg}")`;
     desk.style.backgroundSize = "cover";
     desk.style.backgroundPosition = "center";
     desk.style.backgroundRepeat = "no-repeat";
@@ -2760,6 +2821,7 @@ function savePortraitNote() {
   }
 })();
 
+applyTheme();
 applyPortrait();
 applyPortraitNote();
 applyBackground();
